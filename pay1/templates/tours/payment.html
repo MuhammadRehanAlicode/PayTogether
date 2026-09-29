@@ -1,0 +1,51 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Make a payment | PayTogether</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --navy:#11283a; --teal:#087a74; --mint:#e7f5f0; --coral:#e87856; --paper:#fffdf9; --muted:#63747b; }
+        * { box-sizing:border-box; } body { min-height:100vh; margin:0; color:var(--navy); background:radial-gradient(circle at 8% 10%,#ccece3 0,transparent 25rem),radial-gradient(circle at 92% 90%,#f9d8c9 0,transparent 27rem),#f7f5ef; font-family:"DM Sans",Arial,sans-serif; }
+        .shell { width:min(100% - 32px,760px); margin:auto; padding:32px 0 70px; } .page-top { display:flex; align-items:center; justify-content:space-between; } .back { display:inline-flex; gap:8px; align-items:center; color:#45616c; font-size:.9rem; font-weight:700; text-decoration:none; } .back:hover { color:var(--teal); }
+        .notification-wrap { position:relative; }.notification-bell { position:relative; display:grid; width:42px; height:42px; place-items:center; border:1px solid #d9e1df; border-radius:50%; cursor:pointer; color:var(--teal); background:var(--paper); font-size:1.1rem; }.notification-bell:hover { color:white; background:var(--teal); }.notification-count { position:absolute; top:-5px; right:-5px; min-width:18px; padding:2px 4px; border:2px solid #f7f5ef; border-radius:999px; color:white; background:var(--coral); font:700 .61rem Arial,sans-serif; }.notification-menu { position:absolute; z-index:10; top:51px; right:0; display:none; width:min(370px,calc(100vw - 32px)); overflow:hidden; border:1px solid #d9e1df; border-radius:16px; background:white; box-shadow:0 18px 45px rgba(25,48,56,.18); }.notification-menu.is-open { display:block; }.notification-empty { margin:0; padding:22px; color:var(--muted); text-align:center; font-size:.85rem; }.notification-item { display:flex; gap:11px; padding:14px 16px; border-bottom:1px solid #edf0ef; color:var(--navy); text-decoration:none; }.notification-item:last-child { border:0; }.notification-item:hover { background:#f5faf8; }.notification-dot { flex:0 0 auto; width:9px; height:9px; margin-top:5px; border-radius:50%; background:var(--coral); }.notification-item.pending .notification-dot { background:#d79b1e; }.notification-item strong,.notification-item small,.notification-item em { display:block; }.notification-item strong { font-size:.82rem; }.notification-item small { margin-top:4px; color:var(--muted); font-size:.74rem; line-height:1.4; }.notification-item em { margin-top:6px; color:var(--teal); font-size:.7rem; font-style:normal; font-weight:700; text-transform:uppercase; }
+        .brand { margin:44px 0 19px; color:var(--teal); font-weight:700; letter-spacing:.14em; font-size:.76rem; text-transform:uppercase; } h1 { max-width:540px; margin:0; font:700 clamp(2.5rem,7vw,4.8rem)/.98 "Playfair Display",Georgia,serif; letter-spacing:-.055em; }
+        .intro { max-width:540px; margin:18px 0 32px; color:var(--muted); font-size:1.05rem; line-height:1.6; }.card { overflow:hidden; border:1px solid rgba(17,40,58,.1); border-radius:24px; background:var(--paper); box-shadow:0 20px 55px rgba(25,48,56,.12); }
+        .summary { display:flex; justify-content:space-between; gap:24px; padding:27px 30px; color:white; background:linear-gradient(120deg,var(--navy),#1c4c58); }.summary-label { margin:0 0 5px; opacity:.72; font-size:.76rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; }.recipient { margin:0; font-size:1.15rem; font-weight:700; }.amount { align-self:center; font-size:1.7rem; font-weight:700; white-space:nowrap; }
+        form { padding:30px; } .prompt { margin:0 0 18px; font-size:1.07rem; font-weight:700; }.methods { display:grid; gap:12px; }.method { display:flex; align-items:center; gap:15px; padding:17px; border:1px solid #d9e1df; border-radius:14px; cursor:pointer; transition:.18s ease; }.method:hover,.method:has(input:checked) { border-color:var(--teal); background:var(--mint); box-shadow:0 4px 14px rgba(8,122,116,.1); }.method input { accent-color:var(--teal); width:18px; height:18px; }.method-icon { display:grid; place-items:center; width:42px; height:42px; border-radius:12px; color:var(--teal); background:white; font-size:1.2rem; }.method strong { display:block; }.method small { display:block; margin-top:3px; color:var(--muted); }.submit { width:100%; margin-top:24px; border:0; border-radius:13px; padding:15px 20px; cursor:pointer; color:white; background:var(--coral); box-shadow:0 10px 20px rgba(232,120,86,.25); font:700 1rem "DM Sans",sans-serif; }.submit:hover { background:#d56444; }.submit:disabled { opacity:.6; cursor:not-allowed; }.note { margin:17px 0 0; color:var(--muted); font-size:.82rem; line-height:1.5; text-align:center; }.message { min-height:21px; margin:17px 0 0; font-size:.9rem; font-weight:700; text-align:center; } @media (max-width:560px) { .shell { padding-top:28px; }.summary { align-items:flex-start; flex-direction:column; }.amount { align-self:auto; } form,.summary { padding:23px; } }
+    </style>
+</head>
+<body data-tour-id="{{ tour_id }}" data-recipient-id="{{ recipient_id }}">
+    <main class="shell">
+        <div class="page-top">
+            <a id="backLink" class="back" href="/tours/{{ tour_id }}/">&larr; Back to group balance</a>
+            <div class="notification-wrap" data-notification-wrap>
+                <button class="notification-bell" type="button" data-notification-bell aria-label="Open payment notifications" aria-expanded="false">&#128276;<span class="notification-count" data-notification-count hidden>0</span></button>
+                <div class="notification-menu" data-notification-menu aria-label="Payment notifications"></div>
+            </div>
+        </div>
+        <p class="brand">PayTogether · Secure settlement</p>
+        <h1>Choose how you paid.</h1>
+        <p class="intro">Submit your payment details. The recipient will review and approve the payment before your balance is marked paid.</p>
+        <section class="card" aria-label="Payment details">
+            <div class="summary"><div><p class="summary-label">Paying to</p><p id="recipientName" class="recipient">Loading…</p></div><strong id="paymentAmount" class="amount">$0.00</strong></div>
+            <form id="paymentForm">
+                <p class="prompt">Payment method</p>
+                <div class="methods">
+                    <label class="method"><input type="radio" name="payment_method" value="cash" checked><span class="method-icon">$</span><span><strong>Pay by cash</strong><small>You paid the recipient directly in cash.</small></span></label>
+                    <label class="method"><input type="radio" name="payment_method" value="bank"><span class="method-icon">⌁</span><span><strong>Pay through bank</strong><small>Bank transfer or mobile banking payment.</small></span></label>
+                </div>
+                <button id="paymentSubmit" class="submit" type="submit">Submit for approval</button>
+                <p id="paymentMessage" class="message" role="alert" aria-live="polite"></p>
+                <p class="note">Your payment remains pending until the recipient approves it.</p>
+            </form>
+        </section>
+    </main>
+    <script src="{% static 'js/payment.js' %}"></script>
+    <script src="{% static 'js/notifications.js' %}"></script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+/* Shared interface refinements. The existing colour palette and component
+   styling remain page-owned; these rules provide consistent, fluid behaviour. */
+:root {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
+html { min-width: 320px; }
+
+body {
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
+
+button, [type="button"], [type="submit"], [type="reset"] { touch-action: manipulation; }
+
+button:focus-visible, a:focus-visible, input:focus-visible,
+textarea:focus-visible, select:focus-visible {
+    outline: 3px solid rgba(79, 70, 229, .38);
+    outline-offset: 3px;
+}
+
+img, svg, video, canvas { max-width: 100%; height: auto; }
+
+input, textarea, select { font-size: max(16px, 1em); }
+
+@media (min-width: 640px) {
+    input, textarea, select { font-size: inherit; }
+}
+
+@media (max-width: 639px) {
+    .notification-menu { right: -0.25rem !important; }
+
+    .notification-item { padding: 13px 14px; }
+
+    table { min-width: max-content; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+    }
+}

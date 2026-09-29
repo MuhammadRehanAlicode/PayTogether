@@ -1,0 +1,18 @@
+# Python environments and generated files
+myenv/
+pay1/myenv/
+__pycache__/
+*.py[cod]
+
+# Local configuration and data -- never commit credentials or SQLite data
+.env
+pay1/.env
+*.sqlite3
+pay1/media/
+pay1/staticfiles/
+
+# Editors and operating-system files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

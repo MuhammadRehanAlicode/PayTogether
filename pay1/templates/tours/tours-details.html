@@ -1,0 +1,217 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="Explore tour details with PayTogether.">
+	<title>{{ tour.title|default:"Tour details" }} | PayTogether</title>
+	<style>
+		:root { --ink:#17232b; --muted:#6d7b80; --cream:#f8f5ef; --paper:#fffdf9; --line:#e7e1d7; --teal:#0d6865; --teal-dark:#084c4a; --coral:#e77c5b; --shadow:0 24px 70px rgba(29,48,51,.11); }
+		* { box-sizing:border-box; }
+		body { margin:0; color:var(--ink); background:var(--cream); font-family:Georgia,"Times New Roman",serif; }
+		a { color:inherit; text-decoration:none; }
+		.page-shell { min-height:100vh; background:radial-gradient(circle at 92% 0%,rgba(231,124,91,.14),transparent 26rem),linear-gradient(180deg,#fbfaf7 0%,var(--cream) 56%,#f2eee6 100%); }
+		.topbar { display:flex; align-items:center; justify-content:space-between; max-width:1220px; margin:0 auto; padding:28px 28px 20px; font-family:Arial,Helvetica,sans-serif; }
+		.topbar-actions { display:flex; align-items:center; gap:16px; }
+		.brand { display:inline-flex; align-items:center; gap:10px; color:var(--teal-dark); font-size:1.05rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+		.brand-mark { display:grid; width:36px; height:36px; place-items:center; border-radius:50%; color:white; background:var(--coral); font-size:.95rem; }
+		.back-link { display:inline-flex; align-items:center; gap:8px; color:var(--muted); font-size:.84rem; font-weight:700; letter-spacing:.04em; text-transform:uppercase; }
+		.back-link:hover { color:var(--teal); }
+		.notification-wrap { position:relative; }
+		.notification-bell { position:relative; display:grid; width:42px; height:42px; place-items:center; border:1px solid var(--line); border-radius:50%; cursor:pointer; color:var(--teal-dark); background:var(--paper); font-size:1.15rem; transition:.18s ease; }
+		.notification-bell:hover { border-color:var(--teal); color:white; background:var(--teal); }
+		.notification-count { position:absolute; top:-5px; right:-5px; min-width:18px; padding:2px 4px; border:2px solid var(--cream); border-radius:999px; color:white; background:var(--coral); font:800 .61rem Arial,Helvetica,sans-serif; }
+		.notification-menu { position:absolute; z-index:20; top:51px; right:0; display:none; width:min(370px,calc(100vw - 36px)); overflow:hidden; border:1px solid var(--line); border-radius:16px; background:var(--paper); box-shadow:0 18px 45px rgba(25,48,56,.18); }
+		.notification-menu.is-open { display:block; }.notification-empty { padding:22px; margin:0; color:var(--muted); font-size:.85rem; text-align:center; }.notification-item { display:flex; gap:11px; padding:14px 16px; border-bottom:1px solid var(--line); font-family:Arial,Helvetica,sans-serif; }.notification-item:last-child { border-bottom:0; }.notification-item:hover { background:#f5faf8; }.notification-dot { flex:0 0 auto; width:9px; height:9px; margin-top:5px; border-radius:50%; background:var(--coral); }.notification-item.pending .notification-dot { background:#d79b1e; }.notification-item strong,.notification-item small,.notification-item em { display:block; }.notification-item strong { font-size:.82rem; color:var(--ink); }.notification-item small { margin-top:4px; color:var(--muted); font-size:.74rem; line-height:1.4; }.notification-item em { margin-top:6px; color:var(--teal); font-size:.7rem; font-style:normal; font-weight:800; text-transform:uppercase; letter-spacing:.05em; }
+		.main-content { max-width:1220px; margin:0 auto; padding:34px 28px 80px; }
+		.crumb { margin:0 0 18px; color:var(--coral); font-family:Arial,Helvetica,sans-serif; font-size:.73rem; font-weight:800; letter-spacing:.18em; text-transform:uppercase; }
+		.hero { display:grid; grid-template-columns:minmax(0,1.28fr) minmax(300px,.72fr); min-height:530px; overflow:hidden; border:1px solid rgba(231,225,215,.9); border-radius:26px; background:var(--paper); box-shadow:var(--shadow); }
+		.hero-image { position:relative; min-height:530px; background-color:#c5d8d2; background-image:linear-gradient(135deg,rgba(8,76,74,.3),rgba(231,124,91,.08)),url("{% if tour.image %}{{ tour.image.url }}{% else %}{% static 'img/tour-placeholder.jpg' %}{% endif %}"); background-position:center; background-size:cover; }
+		.image-wash { position:absolute; inset:0; background:linear-gradient(180deg,transparent 50%,rgba(8,33,35,.55) 100%); }
+		.image-caption { position:absolute; right:28px; bottom:25px; left:28px; color:white; font-size:.92rem; font-style:italic; }
+		.hero-copy { display:flex; flex-direction:column; justify-content:center; padding:62px 54px; }
+		.eyebrow,.section-kicker { margin:0 0 18px; color:var(--teal); font-family:Arial,Helvetica,sans-serif; font-size:.72rem; font-weight:800; letter-spacing:.16em; text-transform:uppercase; }
+		h1 { max-width:560px; margin:0; font-size:clamp(2.65rem,5vw,5.2rem); font-weight:500; letter-spacing:-.045em; line-height:.96; }
+		.destination { display:flex; align-items:center; gap:9px; margin:24px 0 0; color:var(--muted); font-family:Arial,Helvetica,sans-serif; font-size:.92rem; font-weight:700; }
+		.pin { color:var(--coral); font-size:1.2rem; }
+		.description { margin:32px 0 0; color:#536267; font-size:1.12rem; line-height:1.75; }
+		.price-row { display:flex; align-items:end; justify-content:space-between; gap:20px; margin-top:38px; padding-top:26px; border-top:1px solid var(--line); }
+		.price-label,.detail-label { display:block; margin-bottom:6px; color:var(--muted); font-family:Arial,Helvetica,sans-serif; font-size:.7rem; font-weight:800; letter-spacing:.12em; text-transform:uppercase; }
+		.price { color:var(--teal-dark); font-size:2.1rem; font-weight:600; }
+		.details { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:22px; }
+		.detail-item { padding:22px 24px; border:1px solid var(--line); border-radius:15px; background:rgba(255,253,249,.72); }
+		.detail-value { font-size:1.2rem; }
+		.story { display:grid; grid-template-columns:minmax(0,1.2fr) minmax(260px,.8fr); gap:70px; padding:76px 32px 0; }
+		.story .section-kicker { margin-bottom:13px; color:var(--coral); }
+		h2 { margin:0; color:var(--teal-dark); font-size:clamp(2rem,4vw,3.2rem); font-weight:500; letter-spacing:-.035em; }
+		.story-copy { margin:22px 0 0; color:#5f6c70; font-size:1.08rem; line-height:1.85; white-space:pre-line; }
+		.note { align-self:start; padding:30px; border-radius:18px; color:white; background:var(--teal-dark); }
+		.note h3 { margin:0 0 12px; font-size:1.5rem; font-weight:500; }
+		.note p { margin:0; color:#c8ded9; font-family:Arial,Helvetica,sans-serif; font-size:.9rem; line-height:1.7; }
+		.join-code-panel { display:none; align-items:center; justify-content:space-between; gap:24px; margin:28px 0 0; padding:24px 28px; border:1px solid #b8d7d3; border-radius:18px; background:#eaf5f3; font-family:Arial,Helvetica,sans-serif; }
+		.join-code-panel.visible { display:flex; }
+		.join-code-panel p { margin:0; color:var(--muted); font-size:.85rem; line-height:1.5; }
+		.join-code { margin-top:6px !important; color:var(--teal-dark) !important; font-family:monospace; font-size:1.65rem !important; font-weight:800; letter-spacing:.18em; }
+		.join-actions { display:flex; gap:10px; }
+		.join-actions button { border:0; border-radius:10px; padding:11px 14px; cursor:pointer; color:white; background:var(--teal); font:700 .82rem Arial,Helvetica,sans-serif; }
+		.join-actions button:hover { background:var(--teal-dark); }
+		.ledger { display:grid; grid-template-columns:minmax(0,1.05fr) minmax(280px,.95fr); gap:36px; margin:54px 32px 0; padding:0 0 10px; }
+		.panel { padding:30px 32px; border:1px solid var(--line); border-radius:20px; background:var(--paper); box-shadow:var(--shadow); font-family:Arial,Helvetica,sans-serif; }
+		.panel h3 { margin:0 0 4px; font-family:Georgia,serif; color:var(--teal-dark); font-size:1.5rem; font-weight:500; }
+		.panel .sub { margin:0 0 20px; color:var(--muted); font-size:.85rem; }
+		.stat-row { display:flex; align-items:baseline; justify-content:space-between; padding:14px 0; border-top:1px solid var(--line); }
+		.stat-row:first-of-type { border-top:0; }
+		.stat-row .label { color:var(--muted); font-size:.82rem; font-weight:700; }
+		.stat-row .value { font-size:1.15rem; font-weight:800; color:var(--ink); }
+		.member-list { margin-top:6px; display:flex; flex-direction:column; gap:10px; }
+		.settlement-card { margin:0 32px 28px; padding:24px 28px; border:1px solid #b8d7d3; border-radius:19px; background:linear-gradient(115deg,#eaf5f3,#fffaf2); font-family:Arial,Helvetica,sans-serif; }.settlement-card[hidden] { display:none; }.settlement-card-inner { display:flex; align-items:center; justify-content:space-between; gap:22px; }.settlement-label { margin:0 0 5px; color:var(--teal); font-size:.7rem; font-weight:800; letter-spacing:.12em; text-transform:uppercase; }.settlement-card h3 { margin:0; color:var(--teal-dark); font:500 1.5rem Georgia,serif; }.settlement-card p:last-child { margin:6px 0 0; color:var(--muted); font-size:.85rem; }.settle-now { flex:0 0 auto; border:0; border-radius:10px; padding:12px 17px; cursor:pointer; color:white; background:var(--teal); font:800 .82rem Arial,Helvetica,sans-serif; }.settle-now:hover { background:var(--teal-dark); }
+		.member-row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 14px; border:1px solid var(--line); border-radius:12px; background:#fbfaf7; }
+		.member-name { font-size:.9rem; font-weight:700; color:var(--ink); }
+		.member-name .tag { margin-left:6px; padding:2px 8px; border-radius:999px; background:#eaf5f3; color:var(--teal-dark); font-size:.65rem; font-weight:800; text-transform:uppercase; letter-spacing:.06em; }
+		.member-figures { text-align:right; font-size:.78rem; color:var(--muted); }
+		.member-figures .balance { display:block; font-size:.95rem; font-weight:800; }
+		.payment-status { display:inline-block; margin-top:5px; padding:3px 7px; border-radius:999px; font-size:.65rem; font-weight:800; letter-spacing:.05em; text-transform:uppercase; }
+		.payment-status.paid { color:#17633f; background:#e2f5ea; }
+		.payment-status.unpaid { color:#a33d2c; background:#fbe5df; }
+		.pay-button { display:block; width:100%; margin-top:8px; border:0; border-radius:8px; padding:7px 10px; cursor:pointer; color:white; background:var(--coral); font:800 .72rem Arial,Helvetica,sans-serif; }
+		.pay-button:hover { background:#cb6548; }
+		.pay-button:disabled { opacity:.6; cursor:not-allowed; }
+		.payment-options { display:flex; justify-content:flex-end; gap:6px; margin-top:8px; }
+		.payment-options button { border:1px solid var(--teal); border-radius:8px; padding:6px 8px; cursor:pointer; color:var(--teal-dark); background:white; font:800 .7rem Arial,Helvetica,sans-serif; }
+		.payment-options button:hover { color:white; background:var(--teal); }
+		.approval-row { border-color:#e7c772; background:#fff8dd; }
+		.approval-row .member-figures { min-width:132px; }
+		.balance.positive { color:#1a7a4c; }
+		.balance.negative { color:#c1462f; }
+		.balance.zero { color:var(--muted); }
+		.expense-form { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:6px; }
+		.expense-form .full { grid-column:1 / -1; }
+		.expense-form label { display:block; margin-bottom:6px; color:var(--muted); font-size:.72rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase; }
+		.expense-form input, .expense-form textarea { width:100%; padding:11px 13px; border:1px solid var(--line); border-radius:10px; font:inherit; font-family:Arial,Helvetica,sans-serif; font-size:.92rem; color:var(--ink); background:#fbfaf7; }
+		.expense-form input:focus, .expense-form textarea:focus { outline:2px solid var(--teal); outline-offset:1px; }
+		.expense-form button { grid-column:1 / -1; border:0; border-radius:10px; padding:12px 16px; cursor:pointer; color:white; background:var(--teal); font:800 .85rem Arial,Helvetica,sans-serif; letter-spacing:.02em; }
+		.expense-form button:hover { background:var(--teal-dark); }
+		.expense-form button:disabled { opacity:.6; cursor:not-allowed; }
+		.form-message { grid-column:1 / -1; margin:0; font-size:.82rem; font-weight:700; }
+		.expense-list { margin-top:22px; display:flex; flex-direction:column; gap:10px; }
+		.expense-item { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:14px 16px; border:1px solid var(--line); border-radius:12px; background:#fbfaf7; }
+		.expense-item .title { font-size:.92rem; font-weight:700; color:var(--ink); }
+		.expense-item .meta { margin-top:3px; font-size:.75rem; color:var(--muted); }
+		.expense-item .amount { font-size:1.05rem; font-weight:800; color:var(--teal-dark); white-space:nowrap; }
+		.expense-item .actions { display:flex; gap:8px; margin-top:8px; }
+		.expense-item .actions button { border:1px solid var(--line); background:white; border-radius:8px; padding:5px 10px; font:700 .72rem Arial,Helvetica,sans-serif; cursor:pointer; color:var(--muted); }
+		.expense-item .actions button:hover { color:var(--teal-dark); border-color:var(--teal); }
+		.expense-item .actions .danger:hover { color:#c1462f; border-color:#c1462f; }
+		.empty-note { padding:20px; text-align:center; color:var(--muted); font-size:.85rem; font-family:Arial,Helvetica,sans-serif; }
+		@media (max-width:800px) { .ledger { grid-template-columns:1fr; margin-left:18px; margin-right:18px; } .settlement-card { margin-left:18px; margin-right:18px; } .settlement-card-inner { align-items:flex-start; flex-direction:column; } .expense-form { grid-template-columns:1fr; } }
+		@media (max-width:800px) { .topbar,.main-content { padding-right:18px; padding-left:18px; } .hero,.story { grid-template-columns:1fr; } .hero-image { min-height:380px; } .hero-copy { padding:42px 28px; } .story { gap:34px; padding:54px 8px 0; } .join-code-panel { align-items:flex-start; flex-direction:column; } }
+		@media (max-width:520px) { .topbar { padding-top:18px; } .brand { font-size:.88rem; } .back-link { font-size:.68rem; } .hero { border-radius:18px; } .hero-image { min-height:285px; } .details { grid-template-columns:1fr; } .price-row { align-items:start; flex-direction:column; } }
+	</style>
+</head>
+
+<body>
+	<div class="page-shell">
+		<header class="topbar">
+			<a class="brand" href="/tours/" aria-label="PayTogether tours home"><span class="brand-mark">+</span>PayTogether</a>
+			<div class="topbar-actions">
+				<div class="notification-wrap" data-notification-wrap>
+					<button class="notification-bell" type="button" data-notification-bell aria-label="Open payment notifications" aria-expanded="false">&#128276;<span class="notification-count" data-notification-count hidden>0</span></button>
+					<div class="notification-menu" data-notification-menu aria-label="Payment notifications"></div>
+				</div>
+				<a class="back-link" href="/tours/">&larr; Back to tours</a>
+			</div>
+		</header>
+
+		<main class="main-content">
+			<p class="crumb">Tour no. {{ tour_id|default:"--" }}</p>
+			<section class="hero" aria-labelledby="tour-title">
+				<div class="hero-image" role="img" aria-label="Photo of {{ tour.destination|default:'the tour destination' }}">
+					<div class="image-wash"></div>
+					<p class="image-caption">A beautiful place is better when shared.</p>
+				</div>
+				<div class="hero-copy">
+					<p class="eyebrow">Your next chapter</p>
+					<h1 id="tour-title">{{ tour.title|default:"Your next adventure awaits" }}</h1>
+					<p class="destination"><span class="pin">&#9678;</span>{{ tour.destination|default:"Destination to be discovered" }}</p>
+					<p class="description">{{ tour.description|default:"Gather your favorite people and make room for the moments you will talk about for years." }}</p>
+					<div class="price-row">
+						<div><span class="price-label">From</span><strong class="price">${{ tour.price|default:"0.00" }}</strong></div>
+						<span class="price-label">Per traveler</span>
+					</div>
+				</div>
+			</section>
+
+			<section class="details" aria-label="Tour summary">
+				<div class="detail-item"><span class="detail-label">Destination</span><span class="detail-value">{{ tour.destination|default:"Not specified" }}</span></div>
+				<div class="detail-item"><span class="detail-label">State / province</span><span class="detail-value">{{ tour.states|default:"Not specified" }}</span></div>
+				<div class="detail-item"><span class="detail-label">Published</span><span class="detail-value">{{ tour.created_at|date:"M d, Y"|default:"Recently" }}</span></div>
+			</section>
+
+			<section id="joinCodePanel" class="join-code-panel" aria-label="Tour join code">
+				<div><p>Invite members with this code</p><p id="joinCodeValue" class="join-code">--------</p></div>
+				<div class="join-actions"><button id="copyJoinCode" type="button">Copy code</button><button id="shareJoinCode" type="button">Share</button></div>
+			</section>
+
+			<section class="story" aria-labelledby="story-title">
+				<div>
+					<p class="section-kicker">The story of this place</p>
+					<h2 id="story-title">Go somewhere worth remembering.</h2>
+					<p class="story-copy">{{ tour.description|default:"This tour is ready for its next group of explorers. Take in the local character, share the small discoveries, and enjoy a thoughtfully planned escape with the people who make every trip better." }}</p>
+				</div>
+				<aside class="note"><h3>Travel together.</h3><p>PayTogether makes it simple to find a great place, bring your people along, and keep every detail in one welcoming space.</p></aside>
+			</section>
+
+			<section id="settlementCard" class="settlement-card" hidden aria-live="polite">
+				<div class="settlement-card-inner">
+					<div><p class="settlement-label">Recommended next step</p><h3 id="settlementTitle">Settle your balance</h3><p id="settlementCopy"></p></div>
+					<button id="settleNowButton" class="settle-now" type="button">Settle securely</button>
+				</div>
+			</section>
+
+			<section class="ledger" aria-labelledby="ledger-title">
+				<div class="panel">
+					<h3 id="ledger-title">Add an expense</h3>
+					<p class="sub">Log what you spent so the group's totals stay accurate.</p>
+					<form id="expenseForm" class="expense-form">
+						<div class="full">
+							<label for="expenseTitle">What was it for?</label>
+							<input id="expenseTitle" name="title" type="text" maxlength="150" required placeholder="e.g. Hotel deposit">
+						</div>
+						<div>
+							<label for="expenseAmount">Amount</label>
+							<input id="expenseAmount" name="amount" type="number" min="0.01" step="0.01" required placeholder="0.00">
+						</div>
+						<div>
+							<label for="expenseNotes">Notes (optional)</label>
+							<input id="expenseNotes" name="notes" type="text" maxlength="255" placeholder="Split evenly">
+						</div>
+						<p id="expenseFormMessage" class="form-message" role="alert" aria-live="polite"></p>
+						<button id="expenseSubmit" type="submit">Add expense</button>
+					</form>
+
+					<div id="expenseList" class="expense-list">
+						<p class="empty-note">Loading expenses...</p>
+					</div>
+				</div>
+
+				<div class="panel">
+					<h3>Group balance</h3>
+					<p class="sub">Split equally across everyone in this tour.</p>
+					<div class="stat-row"><span class="label">Total spent</span><span class="value" id="summaryTotal">$0.00</span></div>
+					<div class="stat-row"><span class="label">Members</span><span class="value" id="summaryMembers">0</span></div>
+					<div class="stat-row"><span class="label">Share per member</span><span class="value" id="summaryShare">$0.00</span></div>
+					<div id="memberList" class="member-list">
+						<p class="empty-note">Loading members...</p>
+					</div>
+				</div>
+			</section>
+		</main>
+	</div>
+	<script src="{% static 'js/tours-details.js' %}"></script>
+	<script src="{% static 'js/notifications.js' %}"></script>
+</body>
+
+</html>
+    

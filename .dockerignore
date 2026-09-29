@@ -1,0 +1,9 @@
+.git
+.gitignore
+myenv/
+**/__pycache__/
+**/*.py[cod]
+pay1/.env
+pay1/db.sqlite3
+pay1/media/
+pay1/staticfiles/
