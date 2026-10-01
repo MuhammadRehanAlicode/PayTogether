@@ -118,7 +118,7 @@ class SettlementPaymentAPIView(APIView):
 
         if payment_method not in SettlementPayment.PaymentMethod.values:
             return Response(
-                {'payment_method': ['Choose Cash or Bank transfer.']},
+                {'payment_method': ['Choose Cash, Bank transfer, or Raast transfer.']},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 

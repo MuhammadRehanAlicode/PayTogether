@@ -47,3 +47,15 @@ class SettlementPaymentTests(TestCase):
         member_row = next(row for row in summary['members'] if row['id'] == self.member.id)
         self.assertEqual(member_row['payment_status'], 'paid', member_row)
         self.assertEqual(member_row['balance'], '0.00')
+
+    def test_raast_transfer_waits_for_recipient_confirmation(self):
+        response = self.client.post(
+            f'/api/tours/{self.tour.pk}/payments/',
+            {'paid_to': self.owner.id, 'amount': '50.00', 'payment_method': 'raast'},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, 201, response.content)
+        payment = SettlementPayment.objects.get(tour=self.tour)
+        self.assertEqual(payment.payment_method, SettlementPayment.PaymentMethod.RAAST)
+        self.assertEqual(payment.status, SettlementPayment.Status.PENDING)

@@ -32,7 +32,17 @@ input, textarea, select { font-size: max(16px, 1em); }
 }
 
 @media (max-width: 639px) {
-    .notification-menu { right: -0.25rem !important; }
+    .notification-menu {
+        position: fixed !important;
+        top: var(--notification-top, 64px) !important;
+        right: auto !important;
+        left: var(--notification-left, 12px) !important;
+        width: min(370px, calc(100vw - 24px)) !important;
+        max-height: min(68vh, 520px);
+        overflow-y: auto !important;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+    }
 
     .notification-item { padding: 13px 14px; }
 
@@ -46,4 +56,34 @@ input, textarea, select { font-size: max(16px, 1em); }
         animation-duration: .01ms !important;
         animation-iteration-count: 1 !important;
     }
+}
+
+@media (max-width: 639px) {
+    .notification-item > span:last-child { min-width: 0; overflow-wrap: anywhere; }
+    .notification-item strong { line-height: 1.35; }
+    .notification-item small { line-height: 1.5; }
+}
+
+@media (max-width: 420px) {
+    .notification-menu { max-height: 62vh; border-radius: 14px; }
+    .notification-item { gap: 9px; padding: 12px; }
+}
+
+/* Keep dense data tables usable on narrow phones without widening the page. */
+@media (max-width: 639px) {
+    table {
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    main, section, article { min-width: 0; }
+
+    input, textarea, select, button { max-width: 100%; }
+
+    body:has(nav.fixed.bottom-0) main { padding-bottom: calc(5rem + env(safe-area-inset-bottom)); }
+    nav.fixed.bottom-0 { padding-bottom: env(safe-area-inset-bottom); }
 }

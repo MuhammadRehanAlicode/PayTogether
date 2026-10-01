@@ -10,6 +10,8 @@ from rest_framework .permissions import IsAuthenticated
 from rest_framework import status
 from rest_framework .filters import SearchFilter , OrderingFilter
 from rest_framework.exceptions import PermissionDenied
+from django.db.models import Q
+from rest_framework.permissions import SAFE_METHODS
 
 from .models import tour, TourMember
 from .serilizers import tourserializer
@@ -38,6 +40,13 @@ class TourdetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+        # Tour members need to read the full detail payload (including the
+        # uploaded image URL), while edits and deletes remain owner-only.
+        if self.request.method in SAFE_METHODS:
+            return tour.objects.filter(
+                Q(created_by=self.request.user)
+                | Q(memberships__user=self.request.user)
+            ).distinct()
         return tour.objects.filter(created_by=self.request.user)
     
 

@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
     <title>Make a payment | PayTogether</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -38,10 +39,10 @@
                 <div class="methods">
                     <label class="method"><input type="radio" name="payment_method" value="cash" checked><span class="method-icon">$</span><span><strong>Pay by cash</strong><small>You paid the recipient directly in cash.</small></span></label>
                     <label class="method"><input type="radio" name="payment_method" value="bank"><span class="method-icon">⌁</span><span><strong>Pay through bank</strong><small>Bank transfer or mobile banking payment.</small></span></label>
-                </div>
+                <label class="method"><input type="radio" name="payment_method" value="raast"><span class="method-icon">R</span><span><strong>Pay with Raast</strong><small>Transfer through your bank or wallet app, then ask the recipient to confirm.</small></span></label></div>
                 <button id="paymentSubmit" class="submit" type="submit">Submit for approval</button>
                 <p id="paymentMessage" class="message" role="alert" aria-live="polite"></p>
-                <p class="note">Your payment remains pending until the recipient approves it.</p>
+                <p class="note">Cash, bank and Raast transfers remain pending until the recipient confirms receipt. PayTogether does not yet connect to a Raast bank or PSP API.</p>
             </form>
         </section>
     </main>

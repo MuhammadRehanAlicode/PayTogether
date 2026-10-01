@@ -43,6 +43,7 @@ class SettlementPayment(models.Model):
     class PaymentMethod(models.TextChoices):
         CASH = 'cash', 'Cash'
         BANK = 'bank', 'Bank transfer'
+        RAAST = 'raast', 'Raast transfer (manual confirmation)'
 
     class Status(models.TextChoices):
         PENDING = 'pending', 'Pending approval'
@@ -68,7 +69,7 @@ class SettlementPayment(models.Model):
         decimal_places=2,
         validators=[MinValueValidator(0.01)],
     )
-    payment_method = models.CharField(max_length=10, choices=PaymentMethod.choices)
+    payment_method = models.CharField(max_length=32, choices=PaymentMethod.choices)
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
     created_at = models.DateTimeField(auto_now_add=True)
 

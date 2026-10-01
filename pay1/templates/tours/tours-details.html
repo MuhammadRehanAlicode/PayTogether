@@ -6,6 +6,7 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta name="description" content="Explore tour details with PayTogether.">
+	<link rel="stylesheet" href="{% static 'css/app.css' %}">
 	<title>{{ tour.title|default:"Tour details" }} | PayTogether</title>
 	<style>
 		:root { --ink:#17232b; --muted:#6d7b80; --cream:#f8f5ef; --paper:#fffdf9; --line:#e7e1d7; --teal:#0d6865; --teal-dark:#084c4a; --coral:#e77c5b; --shadow:0 24px 70px rgba(29,48,51,.11); }
@@ -59,6 +60,16 @@
 		.join-actions button:hover { background:var(--teal-dark); }
 		.ledger { display:grid; grid-template-columns:minmax(0,1.05fr) minmax(280px,.95fr); gap:36px; margin:54px 32px 0; padding:0 0 10px; }
 		.panel { padding:30px 32px; border:1px solid var(--line); border-radius:20px; background:var(--paper); box-shadow:var(--shadow); font-family:Arial,Helvetica,sans-serif; }
+		.balance-panel { position:relative; overflow:hidden; background:linear-gradient(150deg,#fffdf9 35%,#eff8f5 100%); }
+		.balance-panel::before { position:absolute; top:-58px; right:-44px; width:150px; height:150px; border-radius:50%; background:rgba(13,104,101,.07); content:""; }
+		.balance-heading { position:relative; display:flex; align-items:flex-start; justify-content:space-between; gap:14px; }
+		.balance-mark { display:grid; width:42px; height:42px; flex:0 0 auto; place-items:center; border-radius:13px; color:var(--teal-dark); background:#dff1eb; font-size:1.25rem; }
+		.balance-highlight { position:relative; margin:20px 0 16px; padding:18px 20px; border:1px solid #d6ebe4; border-radius:16px; background:rgba(255,255,255,.78); }
+		.balance-highlight .label { display:block; color:var(--muted); font-size:.72rem; font-weight:800; letter-spacing:.11em; text-transform:uppercase; }
+		.balance-highlight .value { display:block; margin-top:6px; color:var(--teal-dark); font-size:clamp(1.7rem,4vw,2.25rem); font-weight:800; letter-spacing:-.04em; }
+		.balance-stats { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+		.balance-stats .stat-row { min-width:0; align-items:flex-start; flex-direction:column; gap:8px; padding:14px; border:1px solid var(--line); border-radius:13px; background:rgba(255,255,255,.76); }
+		.balance-stats .stat-row .value { overflow-wrap:anywhere; }
 		.panel h3 { margin:0 0 4px; font-family:Georgia,serif; color:var(--teal-dark); font-size:1.5rem; font-weight:500; }
 		.panel .sub { margin:0 0 20px; color:var(--muted); font-size:.85rem; }
 		.stat-row { display:flex; align-items:baseline; justify-content:space-between; padding:14px 0; border-top:1px solid var(--line); }
@@ -68,6 +79,8 @@
 		.member-list { margin-top:6px; display:flex; flex-direction:column; gap:10px; }
 		.settlement-card { margin:0 32px 28px; padding:24px 28px; border:1px solid #b8d7d3; border-radius:19px; background:linear-gradient(115deg,#eaf5f3,#fffaf2); font-family:Arial,Helvetica,sans-serif; }.settlement-card[hidden] { display:none; }.settlement-card-inner { display:flex; align-items:center; justify-content:space-between; gap:22px; }.settlement-label { margin:0 0 5px; color:var(--teal); font-size:.7rem; font-weight:800; letter-spacing:.12em; text-transform:uppercase; }.settlement-card h3 { margin:0; color:var(--teal-dark); font:500 1.5rem Georgia,serif; }.settlement-card p:last-child { margin:6px 0 0; color:var(--muted); font-size:.85rem; }.settle-now { flex:0 0 auto; border:0; border-radius:10px; padding:12px 17px; cursor:pointer; color:white; background:var(--teal); font:800 .82rem Arial,Helvetica,sans-serif; }.settle-now:hover { background:var(--teal-dark); }
 		.member-row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 14px; border:1px solid var(--line); border-radius:12px; background:#fbfaf7; }
+		.member-row:not(.approval-row) { box-shadow:0 3px 12px rgba(29,48,51,.035); transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease; }
+		.member-row:not(.approval-row):hover { transform:translateY(-1px); border-color:#c9ded8; box-shadow:0 8px 20px rgba(29,48,51,.07); }
 		.member-name { font-size:.9rem; font-weight:700; color:var(--ink); }
 		.member-name .tag { margin-left:6px; padding:2px 8px; border-radius:999px; background:#eaf5f3; color:var(--teal-dark); font-size:.65rem; font-weight:800; text-transform:uppercase; letter-spacing:.06em; }
 		.member-figures { text-align:right; font-size:.78rem; color:var(--muted); }
@@ -107,7 +120,7 @@
 		.empty-note { padding:20px; text-align:center; color:var(--muted); font-size:.85rem; font-family:Arial,Helvetica,sans-serif; }
 		@media (max-width:800px) { .ledger { grid-template-columns:1fr; margin-left:18px; margin-right:18px; } .settlement-card { margin-left:18px; margin-right:18px; } .settlement-card-inner { align-items:flex-start; flex-direction:column; } .expense-form { grid-template-columns:1fr; } }
 		@media (max-width:800px) { .topbar,.main-content { padding-right:18px; padding-left:18px; } .hero,.story { grid-template-columns:1fr; } .hero-image { min-height:380px; } .hero-copy { padding:42px 28px; } .story { gap:34px; padding:54px 8px 0; } .join-code-panel { align-items:flex-start; flex-direction:column; } }
-		@media (max-width:520px) { .topbar { padding-top:18px; } .brand { font-size:.88rem; } .back-link { font-size:.68rem; } .hero { border-radius:18px; } .hero-image { min-height:285px; } .details { grid-template-columns:1fr; } .price-row { align-items:start; flex-direction:column; } }
+		@media (max-width:520px) { .topbar { padding:16px 14px 12px; gap:10px; } .topbar-actions { gap:9px; } .brand { gap:7px; font-size:.78rem; letter-spacing:.05em; } .brand-mark { width:32px; height:32px; } .back-link { font-size:.62rem; letter-spacing:.02em; } .main-content { padding:24px 14px 64px; } .hero { border-radius:18px; } .hero-image { min-height:250px; } .hero-copy { padding:30px 22px; } .description { margin-top:22px; font-size:1rem; } .details { grid-template-columns:1fr; gap:10px; } .detail-item { padding:16px 18px; } .story { padding:42px 4px 0; } .ledger { margin:38px 0 0; gap:18px; } .panel { padding:22px 18px; border-radius:17px; } .settlement-card { margin:0 0 20px; padding:20px; } .settle-now { width:100%; min-height:44px; } .join-code-panel { margin-top:18px; padding:18px; } .join-actions { width:100%; } .join-actions button { flex:1; min-height:42px; } .member-row { align-items:stretch; flex-direction:column; gap:8px; padding:14px; } .member-figures { text-align:left; } .approval-row .member-figures { min-width:0; } .pay-button { min-height:40px; } .expense-item { align-items:flex-start; flex-wrap:wrap; padding:13px; } .expense-item .amount { margin-left:auto; } }
 	</style>
 </head>
 
@@ -196,12 +209,13 @@
 					</div>
 				</div>
 
-				<div class="panel">
-					<h3>Group balance</h3>
-					<p class="sub">Split equally across everyone in this tour.</p>
-					<div class="stat-row"><span class="label">Total spent</span><span class="value" id="summaryTotal">$0.00</span></div>
-					<div class="stat-row"><span class="label">Members</span><span class="value" id="summaryMembers">0</span></div>
-					<div class="stat-row"><span class="label">Share per member</span><span class="value" id="summaryShare">$0.00</span></div>
+				<div class="panel balance-panel">
+					<div class="balance-heading"><div><h3>Group balance</h3><p class="sub">A clear view of what the group has spent and each person’s share.</p></div><span class="balance-mark" aria-hidden="true">↗</span></div>
+					<div class="balance-highlight"><span class="label">Share per member</span><strong class="value" id="summaryShare">$0.00</strong></div>
+					<div class="balance-stats">
+						<div class="stat-row"><span class="label">Total spent</span><span class="value" id="summaryTotal">$0.00</span></div>
+						<div class="stat-row"><span class="label">Group members</span><span class="value" id="summaryMembers">0</span></div>
+					</div>
 					<div id="memberList" class="member-list">
 						<p class="empty-note">Loading members...</p>
 					</div>

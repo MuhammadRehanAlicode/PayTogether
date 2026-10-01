@@ -44,6 +44,29 @@ class JoinTourAPITests(TestCase):
         self.assertEqual(joined.status_code, 201)
         self.assertEqual(duplicate.status_code, 409)
         self.assertEqual(TourMember.objects.filter(tour=self.tour, user=self.member).count(), 1)
+
+    def test_joined_member_can_load_tour_details_and_image(self):
+        self.client.force_authenticate(self.member)
+        joined = self.client.post('/api/tours/join/', {'join_code': self.tour.join_code}, format='json')
+        self.assertEqual(joined.status_code, 201)
+
+        response = self.client.get(f'/api/tours/{self.tour.pk}/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['title'], self.tour.title)
+        self.assertEqual(response.data['destination'], self.tour.destination)
+
+    def test_joined_member_cannot_edit_tour(self):
+        self.client.force_authenticate(self.member)
+        self.client.post('/api/tours/join/', {'join_code': self.tour.join_code}, format='json')
+
+        response = self.client.patch(
+            f'/api/tours/{self.tour.pk}/', {'title': 'Changed by member'}, format='json'
+        )
+
+        self.assertEqual(response.status_code, 404)
+        self.tour.refresh_from_db()
+        self.assertEqual(self.tour.title, 'Northern Escape')
 from rest_framework.test import APIClient
 
 from apps.accounts.models import User
