@@ -44,6 +44,8 @@ class SettlementPayment(models.Model):
         CASH = 'cash', 'Cash'
         BANK = 'bank', 'Bank transfer'
         RAAST = 'raast', 'Raast transfer (manual confirmation)'
+        EASYPAISA = 'easypaisa', 'Easypaisa (manual confirmation)'
+        JAZZCASH = 'jazzcash', 'JazzCash (manual confirmation)'
 
     class Status(models.TextChoices):
         PENDING = 'pending', 'Pending approval'
@@ -70,6 +72,7 @@ class SettlementPayment(models.Model):
         validators=[MinValueValidator(0.01)],
     )
     payment_method = models.CharField(max_length=32, choices=PaymentMethod.choices)
+    transaction_reference = models.CharField(max_length=100, blank=True)
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
     created_at = models.DateTimeField(auto_now_add=True)
 

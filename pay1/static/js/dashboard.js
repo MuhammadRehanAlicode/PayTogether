@@ -77,10 +77,10 @@ async function loadDashboardSummary() {
 
         setText('#statTours', summary.total_tours);
         setText('#statMembers', summary.total_members);
-        setText('#statExpenses', `$${Number(summary.total_expenses).toFixed(2)}`);
+        setText('#statExpenses', formatPKR(summary.total_expenses));
 
         const balance = Number(summary.balance);
-        setText('#statBalance', `$${Math.abs(balance).toFixed(2)}`);
+        setText('#statBalance', formatPKR(Math.abs(balance)));
         const note = document.querySelector('#statBalanceNote');
         if (note) {
             if (balance > 0) {
@@ -148,6 +148,14 @@ function renderToursError(containerId) {
 function setText(selector, value) {
     const element = document.querySelector(selector);
     if (element) element.textContent = value;
+}
+
+function formatPKR(amount) {
+    const value = Number(amount);
+    return `PKR ${new Intl.NumberFormat('en-PK', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    }).format(Number.isFinite(value) ? value : 0)}`;
 }
 
 async function fetchWithAuth(url, options = {}) {

@@ -87,3 +87,61 @@ input, textarea, select { font-size: max(16px, 1em); }
     body:has(nav.fixed.bottom-0) main { padding-bottom: calc(5rem + env(safe-area-inset-bottom)); }
     nav.fixed.bottom-0 { padding-bottom: env(safe-area-inset-bottom); }
 }
+
+/* Consistent layouts on compact phones, including devices down to 320px wide. */
+*, *::before, *::after { box-sizing: border-box; }
+body { min-width: 320px; }
+img, picture, video, canvas, svg { max-width: 100%; }
+main, header, footer, section, article, form, fieldset, nav, aside { min-width: 0; }
+button, input[type="button"], input[type="submit"], input[type="reset"] { touch-action: manipulation; }
+
+@media (max-width: 639px) {
+    body { font-size: 15px; }
+    p, h1, h2, h3, h4, label, a, button, small, strong, span { overflow-wrap: anywhere; }
+
+    /* Protect every page from a long title, email, code, or number forcing
+       the viewport wider than the phone. */
+    main { max-width: 100%; }
+    [class*="grid-cols-"] { min-width: 0; }
+    [class*="grid-cols-"] > *, [class*="flex"] > * { min-width: 0; }
+    input, select, textarea { min-height: 44px; max-width: 100%; }
+    textarea { min-height: 120px; }
+    button, a[role="button"] { min-height: 42px; }
+    img { object-fit: cover; }
+
+    /* Notification menus stay within the visible phone area and above page
+       navigation, with their own scroll when the list is long. */
+    .notification-menu {
+        z-index: 100 !important;
+        width: min(370px, calc(100vw - 24px)) !important;
+        max-height: min(64dvh, 520px);
+        border-radius: 16px;
+        box-shadow: 0 18px 48px rgba(15, 23, 42, .2);
+    }
+    .notification-item { align-items: flex-start; min-height: 0; }
+
+    /* Images and copy in trip cards remain readable and contained. */
+    #tourCardList article { align-items: flex-start; }
+    #tourCardList article img { width: clamp(56px, 18vw, 80px); height: clamp(56px, 18vw, 80px); }
+    #tourCardList article a, #tourCardList article button { min-height: 40px; }
+
+    /* Forms use comfortable spacing and never overflow their cards. */
+    form input:not([type="checkbox"]):not([type="radio"]),
+    form select, form textarea { width: 100%; }
+    input[type="file"] { width: 100%; font-size: .875rem; }
+
+    /* Keep the app's bottom navigation clear of the phone home indicator. */
+    nav.fixed.bottom-0 { min-height: calc(64px + env(safe-area-inset-bottom)); }
+}
+
+@media (max-width: 380px) {
+    .notification-menu { max-height: 58dvh; }
+    #tourCardList article { gap: 10px; padding: 10px; }
+    #tourCardList article .mt-3 { gap: 6px; }
+    #tourCardList article a, #tourCardList article button { padding-right: 9px; padding-left: 9px; font-size: .78rem; }
+    #deleteModal .relative.w-full { padding: 1.15rem; }
+}
+
+@media (min-width: 640px) and (max-width: 900px) {
+    #tourCardList article { gap: 14px; }
+}

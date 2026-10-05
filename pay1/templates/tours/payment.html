@@ -19,6 +19,62 @@
         .summary { display:flex; justify-content:space-between; gap:24px; padding:27px 30px; color:white; background:linear-gradient(120deg,var(--navy),#1c4c58); }.summary-label { margin:0 0 5px; opacity:.72; font-size:.76rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; }.recipient { margin:0; font-size:1.15rem; font-weight:700; }.amount { align-self:center; font-size:1.7rem; font-weight:700; white-space:nowrap; }
         form { padding:30px; } .prompt { margin:0 0 18px; font-size:1.07rem; font-weight:700; }.methods { display:grid; gap:12px; }.method { display:flex; align-items:center; gap:15px; padding:17px; border:1px solid #d9e1df; border-radius:14px; cursor:pointer; transition:.18s ease; }.method:hover,.method:has(input:checked) { border-color:var(--teal); background:var(--mint); box-shadow:0 4px 14px rgba(8,122,116,.1); }.method input { accent-color:var(--teal); width:18px; height:18px; }.method-icon { display:grid; place-items:center; width:42px; height:42px; border-radius:12px; color:var(--teal); background:white; font-size:1.2rem; }.method strong { display:block; }.method small { display:block; margin-top:3px; color:var(--muted); }.submit { width:100%; margin-top:24px; border:0; border-radius:13px; padding:15px 20px; cursor:pointer; color:white; background:var(--coral); box-shadow:0 10px 20px rgba(232,120,86,.25); font:700 1rem "DM Sans",sans-serif; }.submit:hover { background:#d56444; }.submit:disabled { opacity:.6; cursor:not-allowed; }.note { margin:17px 0 0; color:var(--muted); font-size:.82rem; line-height:1.5; text-align:center; }.message { min-height:21px; margin:17px 0 0; font-size:.9rem; font-weight:700; text-align:center; } @media (max-width:560px) { .shell { padding-top:28px; }.summary { align-items:flex-start; flex-direction:column; }.amount { align-self:auto; } form,.summary { padding:23px; } }
     </style>
+    <style>
+        .methods { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+        .method { min-width:0; padding:15px; border-radius:16px; }
+        .method:has(input:checked) { transform:translateY(-1px); }
+        .method-icon { flex:0 0 42px; font-size:1rem; font-weight:700; }
+        .method small { font-size:.76rem; line-height:1.4; }
+        .transfer-details { margin-top:18px; padding:17px; border:1px solid #dce9e5; border-radius:16px; background:#f4faf7; }
+        .transfer-details[hidden] { display:none; }
+        .transfer-details p { margin:0; color:#415b60; font-size:.87rem; line-height:1.55; }
+        .reference-label { display:block; margin-top:14px; font-size:.83rem; font-weight:700; }
+        .reference-label input { display:block; width:100%; margin-top:7px; border:1px solid #cbd9d5; border-radius:10px; padding:12px 13px; color:var(--navy); background:white; font:500 .95rem "DM Sans",sans-serif; }
+        .reference-label input:focus { outline:3px solid rgba(8,122,116,.17); border-color:var(--teal); }
+        @media(max-width:560px) { .shell { width:min(100% - 24px,760px); padding:22px 0 40px; } .brand { margin-top:32px; } .intro { margin-bottom:24px; font-size:.97rem; } .summary { gap:8px; } .amount { font-size:1.5rem; } form,.summary { padding:21px; } .methods { grid-template-columns:1fr; gap:9px; } .method { padding:13px; } }
+    </style>
+    <style>
+        .shell { width:min(100% - 40px,1000px); padding:34px 0 64px; }
+        .page-top { min-height:44px; }
+        .back { min-height:42px; padding:0 12px; border:1px solid rgba(17,40,58,.1); border-radius:12px; background:rgba(255,255,255,.72); transition:background .18s ease,border-color .18s ease; }
+        .back:hover { border-color:#b9d8d0; background:#fff; }
+        .brand { margin:36px 0 10px; letter-spacing:.12em; }
+        h1 { max-width:none; font:700 clamp(2.1rem,5vw,3.2rem)/1.08 "DM Sans",Arial,sans-serif; letter-spacing:-.045em; }
+        .intro { max-width:620px; margin:10px 0 28px; font-size:1rem; }
+        .card { overflow:hidden; border-color:#dce5e2; border-radius:22px; background:white; box-shadow:0 24px 70px rgba(24,48,55,.12); }
+        .summary { align-items:center; flex-direction:row; justify-content:space-between; gap:24px; min-height:158px; padding:30px; background:linear-gradient(115deg,#11283a,#174b55); }
+        .summary > div::before { display:block; margin-bottom:19px; color:#a9d8ca; content:"PAYMENT SUMMARY"; font-size:.68rem; font-weight:800; letter-spacing:.13em; }
+        .summary-label { margin:0 0 5px; font-size:.72rem; }
+        .recipient { max-width:100%; overflow-wrap:anywhere; font-size:1.05rem; }
+        .amount { align-self:flex-start; margin:7px 0 0; color:white; font-size:clamp(1.8rem,4vw,2.35rem); letter-spacing:-.04em; white-space:normal; overflow-wrap:anywhere; }
+        form { min-width:0; padding:30px; }
+        .section-title { margin:0; font-size:1.05rem; font-weight:800; }
+        .section-hint { margin:5px 0 18px; color:var(--muted); font-size:.84rem; line-height:1.5; }
+        .methods { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+        .method { position:relative; min-height:94px; align-items:flex-start; gap:11px; padding:14px 12px; border-color:#e0e8e5; border-radius:14px; background:#fff; }
+        .method:hover,.method:has(input:checked) { border-color:#16867b; background:#f1faf6; box-shadow:0 5px 16px rgba(8,122,116,.09); }
+        .method input { flex:0 0 auto; width:17px; height:17px; margin:2px 0 0; }
+        .method-icon { flex:0 0 36px; width:36px; height:36px; border:1px solid #e5eeea; border-radius:11px; color:#087a74; background:#f4faf7; font-size:.9rem; }
+        .method-icon svg { width:20px; height:20px; display:block; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+        .method-icon.cash-icon { color:#b7791f; background:#fff8e8; border-color:#f2dfb4; }
+        .method-icon.bank-icon { color:#3564a0; background:#eff5ff; border-color:#d9e5f8; }
+        .method-icon.raast-icon { color:#087a74; background:#e8f7f1; border-color:#cfeadf; }
+        .method-icon.easypaisa-icon { color:#008d4d; background:#eaf8ef; border-color:#ccebd7; }
+        .method-icon.jazzcash-icon { color:#bd2638; background:#fff0f1; border-color:#f2d4d8; }
+        .method strong { color:#173345; font-size:.87rem; }
+        .method small { max-width:18ch; font-size:.72rem; }
+        .prompt { margin:0; font-size:1.05rem; }
+        .section-hint { margin:5px 0 18px; color:var(--muted); font-size:.84rem; line-height:1.5; }
+        .transfer-details { padding:16px; border-color:#cfe5dc; border-radius:14px; }
+        .reference-label input { min-height:46px; }
+        .submit { min-height:50px; margin-top:20px; border-radius:12px; background:#087a74; box-shadow:0 9px 20px rgba(8,122,116,.18); }
+        .submit:hover { background:#06645f; }
+        .note { margin-top:14px; padding:12px 14px; border-radius:11px; background:#f5f8f7; font-size:.76rem; text-align:left; }
+        .message { margin-bottom:0; }
+        @media(max-width:760px) { .summary { min-height:140px; padding:23px 25px; } form { padding:25px; } }
+        @media(max-width:560px) { .shell { width:min(100% - 24px,1000px); padding:20px 0 38px; } .brand { margin-top:28px; } h1 { font-size:clamp(1.85rem,8vw,2.45rem); } .intro { margin-bottom:20px; font-size:.93rem; } .card { border-radius:18px; } .summary { min-height:132px; gap:12px; padding:20px; } .summary > div::before { margin-bottom:13px; } .recipient { font-size:.95rem; } .amount { align-self:center; font-size:clamp(1.2rem,5vw,1.55rem); } form { padding:20px 17px; } .methods { grid-template-columns:1fr; gap:8px; } .method { min-height:72px; align-items:center; padding:12px; } .method small { max-width:none; } .section-hint { margin-bottom:14px; } .note { font-size:.73rem; } }
+        @media(max-width:360px) { .shell { width:calc(100% - 20px); } .summary { gap:8px; padding:18px 15px; } .summary > div { min-width:0; } form { padding:18px 14px; } .method { gap:9px; } .method-icon { flex-basis:32px; width:32px; height:32px; } }
+    </style>
 </head>
 <body data-tour-id="{{ tour_id }}" data-recipient-id="{{ recipient_id }}">
     <main class="shell">
@@ -29,20 +85,30 @@
                 <div class="notification-menu" data-notification-menu aria-label="Payment notifications"></div>
             </div>
         </div>
-        <p class="brand">PayTogether · Secure settlement</p>
-        <h1>Choose how you paid.</h1>
-        <p class="intro">Submit your payment details. The recipient will review and approve the payment before your balance is marked paid.</p>
+        <p class="brand">PayTogether | Group payments</p>
+        <h1>Record your payment</h1>
+        <p class="intro">Choose how you paid and submit it for review. Your group balance updates after the recipient confirms it.</p>
         <section class="card" aria-label="Payment details">
-            <div class="summary"><div><p class="summary-label">Paying to</p><p id="recipientName" class="recipient">Loading…</p></div><strong id="paymentAmount" class="amount">$0.00</strong></div>
+            <div class="summary"><div><p class="summary-label">Paying to</p><p id="recipientName" class="recipient">Loading...</p></div><strong id="paymentAmount" class="amount">PKR 0.00</strong></div>
             <form id="paymentForm">
-                <p class="prompt">Payment method</p>
+                <h2 class="prompt">Payment method</h2>
+                <p class="section-hint">Select the method you used to pay your group member.</p>
                 <div class="methods">
-                    <label class="method"><input type="radio" name="payment_method" value="cash" checked><span class="method-icon">$</span><span><strong>Pay by cash</strong><small>You paid the recipient directly in cash.</small></span></label>
-                    <label class="method"><input type="radio" name="payment_method" value="bank"><span class="method-icon">⌁</span><span><strong>Pay through bank</strong><small>Bank transfer or mobile banking payment.</small></span></label>
-                <label class="method"><input type="radio" name="payment_method" value="raast"><span class="method-icon">R</span><span><strong>Pay with Raast</strong><small>Transfer through your bank or wallet app, then ask the recipient to confirm.</small></span></label></div>
+                    <label class="method"><input type="radio" name="payment_method" value="cash" checked><span class="method-icon cash-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><circle cx="12" cy="12.5" r="3"/><path d="M6 9h.01M18 16h.01M7 4h14a2 2 0 0 1 2 2v10"/></svg></span><span><strong>Cash</strong><small>Handed directly to the recipient</small></span></label>
+                    <label class="method"><input type="radio" name="payment_method" value="bank"><span class="method-icon bank-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m3 9 9-5 9 5M5 10h14M6 10v8m4-8v8m4-8v8m4-8v8M4 20h16M3 22h18"/></svg></span><span><strong>Bank transfer</strong><small>Any bank or mobile banking app</small></span></label>
+                    <label class="method"><input type="radio" name="payment_method" value="raast"><span class="method-icon raast-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 8h13l-3-3m6 11H7l3 3"/><path d="M17 5v3m-10 8v3"/></svg></span><span><strong>Raast</strong><small>Instant transfer from your bank app</small></span></label>
+                    <label class="method"><input type="radio" name="payment_method" value="easypaisa"><span class="method-icon easypaisa-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="14" rx="3"/><path d="M3 10h18m-5 5h2M7 3h10"/></svg></span><span><strong>Easypaisa</strong><small>Send from your Easypaisa wallet</small></span></label>
+                    <label class="method"><input type="radio" name="payment_method" value="jazzcash"><span class="method-icon jazzcash-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M10 6h4m-5 8 2 2 4-5m-3 7h.01"/></svg></span><span><strong>JazzCash</strong><small>Send from your JazzCash wallet</small></span></label>
+                </div>
+                <div id="transferDetails" class="transfer-details" hidden>
+                    <p id="transferInstructions">Send the amount using your chosen service, then submit it for recipient approval.</p>
+                    <label class="reference-label" for="transactionReference">Transaction ID / reference <span>(optional)</span>
+                        <input id="transactionReference" name="transaction_reference" maxlength="100" autocomplete="off" placeholder="Add the reference from your receipt">
+                    </label>
+                </div>
                 <button id="paymentSubmit" class="submit" type="submit">Submit for approval</button>
                 <p id="paymentMessage" class="message" role="alert" aria-live="polite"></p>
-                <p class="note">Cash, bank and Raast transfers remain pending until the recipient confirms receipt. PayTogether does not yet connect to a Raast bank or PSP API.</p>
+                <p class="note">Wallet, Raast and bank transfers are recorded manually. Confirm the recipient account details with them before sending money.</p>
             </form>
         </section>
     </main>

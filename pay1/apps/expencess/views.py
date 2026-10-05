@@ -97,6 +97,7 @@ class TourSummaryAPIView(APIView):
                     'paid_to_name': payment.paid_to.full_name or payment.paid_to.email,
                     'amount': str(payment.amount),
                     'payment_method': payment.payment_method,
+                    'transaction_reference': payment.transaction_reference,
                     'is_awaiting_your_approval': payment.paid_to_id == request.user.id,
                     'is_your_payment': payment.paid_by_id == request.user.id,
                 }
@@ -115,10 +116,16 @@ class SettlementPaymentAPIView(APIView):
         tour_obj = get_tour_for_member(request, tour_id)
         recipient_id = request.data.get('paid_to')
         payment_method = request.data.get('payment_method')
+        transaction_reference = str(request.data.get('transaction_reference', '')).strip()
 
         if payment_method not in SettlementPayment.PaymentMethod.values:
             return Response(
-                {'payment_method': ['Choose Cash, Bank transfer, or Raast transfer.']},
+                {'payment_method': ['Choose cash, bank transfer, Raast, Easypaisa, or JazzCash.']},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if len(transaction_reference) > 100:
+            return Response(
+                {'transaction_reference': ['Reference must be 100 characters or fewer.']},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -143,7 +150,7 @@ class SettlementPaymentAPIView(APIView):
         maximum_payment = min(-payer['balance'], recipient['balance'])
         if amount > maximum_payment:
             return Response(
-                {'amount': [f'You can pay at most ${maximum_payment:.2f} to this member.']},
+                {'amount': [f'You can pay at most PKR {maximum_payment:,.2f} to this member.']},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -153,6 +160,7 @@ class SettlementPaymentAPIView(APIView):
             paid_to_id=recipient_id,
             amount=amount,
             payment_method=payment_method,
+            transaction_reference=transaction_reference,
         )
         return Response({'success': 'Payment submitted and waiting for approval.'}, status=status.HTTP_201_CREATED)
 
@@ -204,7 +212,7 @@ class NotificationAPIView(APIView):
                     'id': f'approval-{payment.id}',
                     'kind': 'approval',
                     'title': 'Payment needs your approval',
-                    'body': f'{payment.paid_by.full_name or payment.paid_by.email} sent ${payment.amount:.2f} for {payment.tour.title}.',
+                    'body': f'{payment.paid_by.full_name or payment.paid_by.email} sent PKR {payment.amount:,.2f} for {payment.tour.title}.',
                     'action_url': f'/tours/{payment.tour_id}/',
                     'action_label': 'Review payment',
                 })
@@ -213,7 +221,7 @@ class NotificationAPIView(APIView):
                     'id': f'pending-{payment.id}',
                     'kind': 'pending',
                     'title': 'Payment awaiting approval',
-                    'body': f'Your ${payment.amount:.2f} payment for {payment.tour.title} is being reviewed.',
+                    'body': f'Your PKR {payment.amount:,.2f} payment for {payment.tour.title} is being reviewed.',
                     'action_url': f'/tours/{payment.tour_id}/',
                     'action_label': 'View balance',
                 })
@@ -234,7 +242,7 @@ class NotificationAPIView(APIView):
                 'id': f'settle-{tour_obj.id}',
                 'kind': 'due',
                 'title': 'You have a balance to settle',
-                'body': f'Pay ${amount:.2f} to {recipient["full_name"] or recipient["email"]} for {tour_obj.title}.',
+                'body': f'Pay PKR {amount:,.2f} to {recipient["full_name"] or recipient["email"]} for {tour_obj.title}.',
                 'action_url': f'/tours/{tour_obj.id}/pay/{recipient["id"]}/',
                 'action_label': 'Settle now',
             })

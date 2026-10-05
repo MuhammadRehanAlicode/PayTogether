@@ -63,7 +63,7 @@ function renderTourDetails(tour, tourId) {
     setText("#tour-title", title);
     setText(".destination", `◉ ${destination}`);
     setText(".description", description);
-    setText(".price", `$${price}`);
+    setText(".price", formatPKR(price));
 
     const details = document.querySelectorAll(".detail-value");
     if (details.length >= 3) {
@@ -221,9 +221,9 @@ async function loadSummary(tourId, token) {
 }
 
 function renderSummary(summary) {
-    setText("#summaryTotal", `$${Number(summary.total_expenses).toFixed(2)}`);
+    setText("#summaryTotal", formatPKR(summary.total_expenses));
     setText("#summaryMembers", String(summary.member_count));
-    setText("#summaryShare", `$${Number(summary.share_per_member).toFixed(2)}`);
+    setText("#summaryShare", formatPKR(summary.share_per_member));
 
     const memberList = document.querySelector("#memberList");
     if (!memberList) return;
@@ -246,15 +246,15 @@ function renderSummary(summary) {
         const balance = Number(member.balance);
         const balanceClass = balance > 0 ? "positive" : balance < 0 ? "negative" : "zero";
         const balanceLabel = balance > 0
-            ? `is owed $${balance.toFixed(2)}`
+            ? `is owed ${formatPKR(balance)}`
             : balance < 0
-                ? `owes $${Math.abs(balance).toFixed(2)}`
+                ? `owes ${formatPKR(Math.abs(balance))}`
                 : "settled up";
         const paymentStatus = member.payment_status === "unpaid" ? "Unpaid" : "Paid";
 
         row.innerHTML = `
             <span class="member-name">${escapeHtml(member.full_name || member.email)}${member.is_you ? '<span class="tag">You</span>' : ''}${member.is_organizer ? '<span class="tag">Organizer</span>' : ''}</span>
-            <span class="member-figures">Expense paid $${Number(member.paid).toFixed(2)}<span class="balance ${balanceClass}">${balanceLabel}</span><span class="payment-status ${member.payment_status}">${paymentStatus}</span></span>
+            <span class="member-figures">Expense paid ${formatPKR(member.paid)}<span class="balance ${balanceClass}">${balanceLabel}</span><span class="payment-status ${member.payment_status}">${paymentStatus}</span></span>
         `;
 
         // Only a member who owes money can mark a payment to a member who is owed.
@@ -263,7 +263,7 @@ function renderSummary(summary) {
             const payButton = document.createElement("button");
             payButton.type = "button";
             payButton.className = "pay-button";
-            payButton.textContent = `Mark paid $${amount.toFixed(2)}`;
+            payButton.textContent = `Pay ${formatPKR(amount)}`;
             payButton.addEventListener("click", () => {
                 window.location.href = `/tours/${summary.tour_id}/pay/${member.id}/`;
             });
@@ -295,8 +295,8 @@ function renderSettlementRecommendation(summary, currentMember) {
         return;
     }
     title.textContent = `Pay ${recipient.full_name || recipient.email}`;
-    copy.textContent = `You owe $${amount.toFixed(2)}. Choose cash, bank transfer, or Raast, then the recipient confirms receipt.`;
-    button.textContent = `Settle $${amount.toFixed(2)}`;
+    copy.textContent = `You owe ${formatPKR(amount)}. Pay by cash, bank, Raast, Easypaisa, or JazzCash; the recipient confirms receipt.`;
+    button.textContent = `Pay ${formatPKR(amount)}`;
     button.onclick = () => { window.location.href = `/tours/${summary.tour_id}/pay/${recipient.id}/`; };
 }
 
@@ -307,8 +307,9 @@ function renderPendingPayments(summary, memberList) {
     awaitingApproval.forEach((payment) => {
         const row = document.createElement("div");
         row.className = "member-row approval-row";
-        const methodName = payment.payment_method === "cash" ? "cash" : payment.payment_method === "raast" ? "Raast" : "bank";
-        row.innerHTML = `<span class="member-name">${escapeHtml(payment.paid_by_name)} sent a ${methodName} payment</span><span class="member-figures">$${Number(payment.amount).toFixed(2)}<span class="payment-status unpaid">Approval needed</span></span>`;
+        const methodName = paymentMethodName(payment.payment_method);
+        const reference = payment.transaction_reference ? `<small>Reference: ${escapeHtml(payment.transaction_reference)}</small>` : "";
+        row.innerHTML = `<span class="member-name">${escapeHtml(payment.paid_by_name)} sent a ${methodName} payment${reference}</span><span class="member-figures">${formatPKR(payment.amount)}<span class="payment-status unpaid">Approval needed</span></span>`;
         const approveButton = document.createElement("button");
         approveButton.type = "button";
         approveButton.className = "pay-button";
@@ -321,10 +322,15 @@ function renderPendingPayments(summary, memberList) {
     submittedByYou.forEach((payment) => {
         const row = document.createElement("div");
         row.className = "member-row approval-row";
-        const methodName = payment.payment_method === "cash" ? "cash" : payment.payment_method === "raast" ? "Raast" : "bank";
-        row.innerHTML = `<span class="member-name">Payment to ${escapeHtml(payment.paid_to_name)}</span><span class="member-figures">$${Number(payment.amount).toFixed(2)} by ${methodName}<span class="payment-status unpaid">Waiting for approval</span></span>`;
+        const methodName = paymentMethodName(payment.payment_method);
+        const reference = payment.transaction_reference ? ` · Ref ${escapeHtml(payment.transaction_reference)}` : "";
+        row.innerHTML = `<span class="member-name">Payment to ${escapeHtml(payment.paid_to_name)}</span><span class="member-figures">${formatPKR(payment.amount)} by ${methodName}${reference}<span class="payment-status unpaid">Waiting for approval</span></span>`;
         memberList.appendChild(row);
     });
+}
+
+function paymentMethodName(method) {
+    return ({ cash: "cash", bank: "bank", raast: "Raast", easypaisa: "Easypaisa", jazzcash: "JazzCash" })[method] || "payment";
 }
 
 async function approvePayment(tourId, paymentId, button) {
@@ -383,7 +389,7 @@ function renderExpenses(expenses, tourId, token) {
         right.style.textAlign = "right";
         const amount = document.createElement("p");
         amount.className = "amount";
-        amount.textContent = `$${Number(expense.amount).toFixed(2)}`;
+        amount.textContent = formatPKR(expense.amount);
         right.appendChild(amount);
 
         if (expense.can_edit) {
@@ -438,4 +444,13 @@ function escapeHtml(value) {
     const div = document.createElement("div");
     div.textContent = value ?? "";
     return div.innerHTML;
+}
+
+function formatPKR(amount) {
+    const value = Number(amount);
+    const formatted = new Intl.NumberFormat("en-PK", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    }).format(Number.isFinite(value) ? value : 0);
+    return `PKR ${formatted}`;
 }

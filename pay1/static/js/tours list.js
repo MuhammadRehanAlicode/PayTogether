@@ -554,31 +554,31 @@ function renderTours(tours) {
 
                 </td>
 
-                <td class="hidden px-6 py-4 text-gray-700 lg:table-cell">
+                <td class="hidden px-6 py-4 text-gray-700 xl:table-cell">
 
                     ${escapeHtml(tour.destination)}
 
                 </td>
 
-                <td class="hidden px-6 py-4 font-medium text-gray-800 lg:table-cell">
+                <td class="hidden px-6 py-4 font-medium text-gray-800 xl:table-cell">
 
                     ${formatCurrency(tour.price)}
 
                 </td>
 
-                <td class="hidden px-6 py-4 text-sm text-gray-600 lg:table-cell">
+                <td class="hidden px-6 py-4 text-sm text-gray-600 xl:table-cell">
 
                     ${escapeHtml(tour.states || "-")}
 
                 </td>
 
-                <td class="hidden px-6 py-4 lg:table-cell">
+                <td class="hidden px-6 py-4 xl:table-cell">
 
                     ${formatDate(tour.created_at)}
 
                 </td>
 
-                <td class="hidden px-6 py-4 lg:table-cell">
+                <td class="hidden px-6 py-4 xl:table-cell">
                     <div class="flex items-center gap-2">
                         <code class="rounded bg-blue-50 px-2 py-1 text-sm font-bold tracking-wider text-blue-800">${escapeHtml(tour.join_code || "-")}</code>
                         <button type="button" class="copyJoinCodeBtn text-sm font-semibold text-blue-600 hover:text-blue-800" data-join-code="${escapeHtml(tour.join_code || "")}">Copy</button>
@@ -588,10 +588,10 @@ function renderTours(tours) {
 
                 <td class="px-3 py-3 text-right sm:px-6 sm:py-4">
 
-                    <div class="flex flex-col items-end gap-1 text-sm lg:flex-row lg:justify-end lg:gap-3 lg:text-base">
+                    <div class="flex flex-col items-end gap-1 text-sm lg:flex-row lg:flex-wrap lg:justify-end lg:gap-3 lg:text-base">
 
                     <a  href="/tours/${tour.id}/"
-                        class="font-semibold text-green-600 hover:text-green-800">
+                        class="whitespace-nowrap font-semibold text-green-600 hover:text-green-800">
 
                         View
 
@@ -599,7 +599,7 @@ function renderTours(tours) {
                     
                     <button
                         type="button"
-                        class="editTourBtn font-semibold text-blue-600 hover:text-blue-800"
+                        class="editTourBtn whitespace-nowrap font-semibold text-blue-600 hover:text-blue-800"
                         data-tour-id="${tour.id}">
 
                         Edit
@@ -608,7 +608,7 @@ function renderTours(tours) {
 
                     <button
                         type="button"
-                        class="deleteTourBtn font-semibold text-red-600 hover:text-red-800"
+                        class="deleteTourBtn whitespace-nowrap font-semibold text-red-600 hover:text-red-800"
                         data-tour-id="${tour.id}"
                         data-tour-title="${escapeHtml(tour.title)}">
 
@@ -689,6 +689,7 @@ function formatCurrency(amount) {
         {
             style: "currency",
             currency: "PKR",
+            currencyDisplay: "code",
             minimumFractionDigits: 2,
         }
     ).format(number);
