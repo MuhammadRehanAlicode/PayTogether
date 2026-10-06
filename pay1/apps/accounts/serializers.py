@@ -47,7 +47,7 @@ class loginSerializer(serializers.ModelSerializer):
 class profileserializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'email', 'full_name', 'phone', 'profile_image']
+        fields = ['id', 'email', 'full_name', 'phone', 'profile_image', 'bank_name', 'bank_account_title', 'bank_account_number', 'raast_id', 'easypaisa_number', 'jazzcash_number']
 
 
 class updateProfileSerializer(serializers.ModelSerializer):
@@ -55,7 +55,7 @@ class updateProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['full_name', 'phone', 'profile_image']
+        fields = ['full_name', 'phone', 'profile_image', 'bank_name', 'bank_account_title', 'bank_account_number', 'raast_id', 'easypaisa_number', 'jazzcash_number']
         extra_kwargs = {
             'full_name': {'required': False},
             'phone': {'required': False},

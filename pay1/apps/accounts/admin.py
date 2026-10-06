@@ -12,6 +12,7 @@ class UserAdmin(DjangoUserAdmin):
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
         ('Personal info', {'fields': ('full_name', 'phone', 'profile_image')}),
+        ('Payment accounts', {'fields': ('bank_name', 'bank_account_title', 'bank_account_number', 'raast_id', 'easypaisa_number', 'jazzcash_number')}),
         ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
         ('Important dates', {'fields': ('last_login',)}),
     )

@@ -74,6 +74,23 @@
         @media(max-width:760px) { .summary { min-height:140px; padding:23px 25px; } form { padding:25px; } }
         @media(max-width:560px) { .shell { width:min(100% - 24px,1000px); padding:20px 0 38px; } .brand { margin-top:28px; } h1 { font-size:clamp(1.85rem,8vw,2.45rem); } .intro { margin-bottom:20px; font-size:.93rem; } .card { border-radius:18px; } .summary { min-height:132px; gap:12px; padding:20px; } .summary > div::before { margin-bottom:13px; } .recipient { font-size:.95rem; } .amount { align-self:center; font-size:clamp(1.2rem,5vw,1.55rem); } form { padding:20px 17px; } .methods { grid-template-columns:1fr; gap:8px; } .method { min-height:72px; align-items:center; padding:12px; } .method small { max-width:none; } .section-hint { margin-bottom:14px; } .note { font-size:.73rem; } }
         @media(max-width:360px) { .shell { width:calc(100% - 20px); } .summary { gap:8px; padding:18px 15px; } .summary > div { min-width:0; } form { padding:18px 14px; } .method { gap:9px; } .method-icon { flex-basis:32px; width:32px; height:32px; } }
+        .shell { width:min(100% - 40px,1120px); }
+        .brand { margin-top:26px; }
+        h1 { max-width:none; font:700 clamp(2rem,4vw,3rem)/1.1 "DM Sans",Arial,sans-serif; letter-spacing:-.045em; }
+        .intro { margin:9px 0 24px; }
+        .card { display:grid; grid-template-columns:minmax(280px,.78fr) minmax(0,1fr); }
+        .summary { min-height:100%; align-items:flex-start; flex-direction:column; justify-content:flex-start; padding:32px; }
+        .amount { align-self:flex-start; }
+        .summary > div::before { margin-bottom:22px; }
+        form { padding:30px; }
+        .transfer-details { color:#173345; }
+        .account-heading { margin:0 0 8px; color:#173345!important; font-weight:800; }
+        .account-value { display:flex; justify-content:space-between; gap:12px; padding:9px 0; border-bottom:1px solid #e4eee9; }
+        .account-value:last-child { border-bottom:0; }
+        .account-value span { color:#63747b; }
+        .account-value strong { text-align:right; overflow-wrap:anywhere; }
+        .account-empty { color:#9a5b14!important; }
+        @media(max-width:760px) { .card { grid-template-columns:1fr; } .summary { min-height:150px; } }
     </style>
 </head>
 <body data-tour-id="{{ tour_id }}" data-recipient-id="{{ recipient_id }}">
@@ -87,7 +104,7 @@
         </div>
         <p class="brand">PayTogether | Group payments</p>
         <h1>Record your payment</h1>
-        <p class="intro">Choose how you paid and submit it for review. Your group balance updates after the recipient confirms it.</p>
+        <p class="intro">Choose a payment method, send your share to the recipient, then submit it for review.</p>
         <section class="card" aria-label="Payment details">
             <div class="summary"><div><p class="summary-label">Paying to</p><p id="recipientName" class="recipient">Loading...</p></div><strong id="paymentAmount" class="amount">PKR 0.00</strong></div>
             <form id="paymentForm">
@@ -101,6 +118,7 @@
                     <label class="method"><input type="radio" name="payment_method" value="jazzcash"><span class="method-icon jazzcash-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M10 6h4m-5 8 2 2 4-5m-3 7h.01"/></svg></span><span><strong>JazzCash</strong><small>Send from your JazzCash wallet</small></span></label>
                 </div>
                 <div id="transferDetails" class="transfer-details" hidden>
+                    <div id="recipientAccountDetails" aria-live="polite"></div>
                     <p id="transferInstructions">Send the amount using your chosen service, then submit it for recipient approval.</p>
                     <label class="reference-label" for="transactionReference">Transaction ID / reference <span>(optional)</span>
                         <input id="transactionReference" name="transaction_reference" maxlength="100" autocomplete="off" placeholder="Add the reference from your receipt">

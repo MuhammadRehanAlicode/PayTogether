@@ -28,6 +28,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const formData = new FormData();
             formData.append('full_name', document.querySelector('#full_name').value.trim());
             formData.append('phone', document.querySelector('#phone').value.trim());
+            ['bank_name', 'bank_account_title', 'bank_account_number', 'raast_id', 'easypaisa_number', 'jazzcash_number'].forEach((field) => {
+                formData.append(field, document.querySelector(`#${field}`).value.trim());
+            });
             const imageFile = document.querySelector('#profile_image').files[0];
             if (imageFile) {
                 formData.append('profile_image', imageFile);
@@ -110,6 +113,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelector('#full_name').value = user.full_name || '';
         document.querySelector('#email').value = user.email || '';
         document.querySelector('#phone').value = user.phone || '';
+        ['bank_name', 'bank_account_title', 'bank_account_number', 'raast_id', 'easypaisa_number', 'jazzcash_number'].forEach((field) => {
+            document.querySelector(`#${field}`).value = user[field] || '';
+        });
         document.querySelector('#profileNameLabel').textContent = user.full_name || 'Traveler';
         document.querySelector('#profileEmailLabel').textContent = user.email || '';
 

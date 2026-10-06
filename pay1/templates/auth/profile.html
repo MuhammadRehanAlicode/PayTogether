@@ -47,6 +47,18 @@
                         <input id="phone" name="phone" type="tel" maxlength="30" placeholder="e.g. 0300-1234567"
                                class="mt-2 block w-full rounded-xl border-slate-300 px-4 py-3 text-slate-900 shadow-sm outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100">
                     </div>
+                    <div class="border-t border-slate-100 pt-5">
+                        <h2 class="text-lg font-bold text-slate-900">Payment account details</h2>
+                        <p class="mt-1 text-sm text-slate-500">Group members will see the relevant details when they choose a payment method.</p>
+                    </div>
+                    <div class="grid gap-5 sm:grid-cols-2">
+                        <div><label for="bank_name" class="text-sm font-semibold text-slate-700">Bank name</label><input id="bank_name" name="bank_name" maxlength="100" placeholder="e.g. HBL" class="mt-2 block w-full rounded-xl border-slate-300 px-4 py-3 text-slate-900 shadow-sm"></div>
+                        <div><label for="bank_account_title" class="text-sm font-semibold text-slate-700">Bank account title</label><input id="bank_account_title" name="bank_account_title" maxlength="100" placeholder="Name on account" class="mt-2 block w-full rounded-xl border-slate-300 px-4 py-3 text-slate-900 shadow-sm"></div>
+                        <div><label for="bank_account_number" class="text-sm font-semibold text-slate-700">Bank account / IBAN</label><input id="bank_account_number" name="bank_account_number" maxlength="50" placeholder="Account number or IBAN" class="mt-2 block w-full rounded-xl border-slate-300 px-4 py-3 text-slate-900 shadow-sm"></div>
+                        <div><label for="raast_id" class="text-sm font-semibold text-slate-700">Raast ID</label><input id="raast_id" name="raast_id" maxlength="100" placeholder="Raast ID or IBAN" class="mt-2 block w-full rounded-xl border-slate-300 px-4 py-3 text-slate-900 shadow-sm"></div>
+                        <div><label for="easypaisa_number" class="text-sm font-semibold text-slate-700">Easypaisa number</label><input id="easypaisa_number" name="easypaisa_number" type="tel" maxlength="30" placeholder="03xx-xxxxxxx" class="mt-2 block w-full rounded-xl border-slate-300 px-4 py-3 text-slate-900 shadow-sm"></div>
+                        <div><label for="jazzcash_number" class="text-sm font-semibold text-slate-700">JazzCash number</label><input id="jazzcash_number" name="jazzcash_number" type="tel" maxlength="30" placeholder="03xx-xxxxxxx" class="mt-2 block w-full rounded-xl border-slate-300 px-4 py-3 text-slate-900 shadow-sm"></div>
+                    </div>
                     <div>
                         <label for="profile_image" class="text-sm font-semibold text-slate-700">Profile photo</label>
                         <input id="profile_image" name="profile_image" type="file" accept="image/*"

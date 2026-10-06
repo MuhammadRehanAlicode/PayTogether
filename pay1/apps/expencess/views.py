@@ -106,6 +106,37 @@ class TourSummaryAPIView(APIView):
         }, status=status.HTTP_200_OK)
 
 
+class RecipientPaymentDetailsAPIView(APIView):
+    """Return account details only to a tour member paying that recipient."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, tour_id, recipient_id):
+        tour_obj = get_tour_for_member(request, tour_id)
+        balances = {row['id']: row['balance'] for row in compute_tour_summary(tour_obj)['members']}
+        if (
+            recipient_id == request.user.id
+            or balances.get(request.user.id, Decimal('0')) >= 0
+            or balances.get(recipient_id, Decimal('0')) <= 0
+            or not (
+                tour_obj.created_by_id == recipient_id
+                or TourMember.objects.filter(tour=tour_obj, user_id=recipient_id).exists()
+            )
+        ):
+            raise PermissionDenied("This member is not a payment recipient in this group.")
+        from apps.accounts.models import User
+        recipient = get_object_or_404(User, pk=recipient_id)
+        return Response({
+            'full_name': recipient.full_name,
+            'phone': recipient.phone,
+            'bank_name': recipient.bank_name,
+            'bank_account_title': recipient.bank_account_title,
+            'bank_account_number': recipient.bank_account_number,
+            'raast_id': recipient.raast_id,
+            'easypaisa_number': recipient.easypaisa_number,
+            'jazzcash_number': recipient.jazzcash_number,
+        }, status=status.HTTP_200_OK)
+
+
 class SettlementPaymentAPIView(APIView):
     """Records that the logged-in member repaid another member of a tour."""
 

@@ -6,6 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const form = document.querySelector("#paymentForm");
     const transferDetails = document.querySelector("#transferDetails");
     const transferInstructions = document.querySelector("#transferInstructions");
+    const accountDetails = document.querySelector("#recipientAccountDetails");
     const referenceInput = document.querySelector("#transactionReference");
     const methodInstructions = {
         bank: "Transfer the amount to the recipient using the bank details they shared with you. Add the receipt reference if available.",
@@ -14,6 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
         jazzcash: "Send money to the recipient JazzCash account. Add the transaction ID if available.",
     };
     let paymentAmount = null;
+    let recipientPaymentDetails = null;
 
     if (!token) { window.location.href = "/login/"; return; }
 
@@ -24,6 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
             transferDetails.hidden = isCash;
             referenceInput.value = "";
             transferInstructions.textContent = methodInstructions[input.value] || "Send the amount using your chosen service, then submit it for recipient approval.";
+            renderAccountDetails(input.value);
         });
     });
 
@@ -39,6 +42,13 @@ document.addEventListener("DOMContentLoaded", () => {
             paymentAmount = Math.min(Math.abs(Number(you.balance)), Number(recipient.balance));
             document.querySelector("#recipientName").textContent = recipient.full_name || recipient.email;
             document.querySelector("#paymentAmount").textContent = formatPKR(paymentAmount);
+            const accountResponse = await fetch(`/api/tours/${tourId}/payment-details/${recipientId}/`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            const accountData = await accountResponse.json();
+            if (!accountResponse.ok) throw new Error(accountData.detail || "Unable to load recipient account details.");
+            recipientPaymentDetails = accountData;
+            renderAccountDetails(form.querySelector('input[name="payment_method"]:checked').value);
         })
         .catch((error) => showMessage(error.message, true));
 
@@ -76,6 +86,43 @@ document.addEventListener("DOMContentLoaded", () => {
         const element = document.querySelector("#paymentMessage");
         element.textContent = message;
         element.style.color = isError ? "#b44737" : "#087a74";
+    }
+
+    function renderAccountDetails(method) {
+        if (!recipientPaymentDetails || method === "cash") {
+            accountDetails.replaceChildren();
+            return;
+        }
+        const d = recipientPaymentDetails;
+        const fields = {
+            bank: [["Bank", d.bank_name], ["Account title", d.bank_account_title], ["Account / IBAN", d.bank_account_number]],
+            raast: [["Raast ID / IBAN", d.raast_id]],
+            easypaisa: [["Easypaisa number", d.easypaisa_number]],
+            jazzcash: [["JazzCash number", d.jazzcash_number]],
+        }[method] || [];
+        accountDetails.replaceChildren();
+        const heading = document.createElement("p");
+        heading.className = "account-heading";
+        heading.textContent = `Send to ${d.full_name || "recipient"}`;
+        accountDetails.append(heading);
+        const populated = fields.filter(([, value]) => value);
+        if (!populated.length) {
+            const empty = document.createElement("p");
+            empty.className = "account-empty";
+            empty.textContent = "No account details added for this method yet. Contact the recipient or ask them to add their details in My Profile.";
+            accountDetails.append(empty);
+            return;
+        }
+        populated.forEach(([label, value]) => {
+            const row = document.createElement("div");
+            row.className = "account-value";
+            const name = document.createElement("span");
+            name.textContent = label;
+            const content = document.createElement("strong");
+            content.textContent = value;
+            row.append(name, content);
+            accountDetails.append(row);
+        });
     }
 
     function formatPKR(amount) {

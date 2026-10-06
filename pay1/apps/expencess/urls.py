@@ -5,6 +5,7 @@ from .views import (
     ExpenseListCreateAPIView,
     SettlementPaymentAPIView,
     SettlementPaymentApprovalAPIView,
+    RecipientPaymentDetailsAPIView,
     TourSummaryAPIView,
     NotificationAPIView,
 )
@@ -17,4 +18,5 @@ urlpatterns = [
     path('summary/', TourSummaryAPIView.as_view(), name='summary'),
     path('payments/', SettlementPaymentAPIView.as_view(), name='payments'),
     path('payments/<int:payment_id>/approve/', SettlementPaymentApprovalAPIView.as_view(), name='payment-approve'),
+    path('payment-details/<int:recipient_id>/', RecipientPaymentDetailsAPIView.as_view(), name='payment-details'),
 ]
