@@ -20,9 +20,11 @@ import dj_database_url
 # development working, but a real SECRET_KEY is mandatory when DEBUG is off.
 _LOCAL_SECRET_KEY = "django-insecure-local-development-only-change-me"
 SECRET_KEY = config("SECRET_KEY", default=_LOCAL_SECRET_KEY)
-DEBUG = config("DEBUG", default=config("DJANGO_DEBUG", default="True")).strip().lower() in {
+DEBUG = config("DJANGO_DEBUG", default=config("DEBUG", default="True")).strip().lower() in {
     "1", "true", "yes", "on"
 }
+STRIPE_SECRET_KEY = config("STRIPE_SECRET_KEY", default="").strip()
+STRIPE_WEBHOOK_SECRET = config("STRIPE_WEBHOOK_SECRET", default="").strip()
 
 if not DEBUG and SECRET_KEY == _LOCAL_SECRET_KEY:
     raise RuntimeError("SECRET_KEY must be set when DEBUG=False.")

@@ -21,7 +21,7 @@ from django.urls import include, path
 from rest_framework_simplejwt.views import TokenRefreshView
 
 from apps.tours.views import Tourlistpageview, createtourpageview, join_tour_page
-from apps.expencess.views import NotificationAPIView
+from apps.expencess.views import NotificationAPIView, stripe_webhook
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -32,6 +32,7 @@ urlpatterns = [
     path('api/tours/', include('apps.tours.urls', namespace='tours')),
     path('api/tours/<int:tour_id>/', include('apps.expencess.urls', namespace='expenses')),
     path('api/notifications/', NotificationAPIView.as_view(), name='notifications'),
+    path('api/stripe/webhook/', stripe_webhook, name='stripe-webhook'),
     path('dashboard/', include('apps.core.urls', namespace='core')),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('', include('apps.tours.page_urls', namespace='tours_page')),

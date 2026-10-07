@@ -309,7 +309,10 @@ function renderPendingPayments(summary, memberList) {
         row.className = "member-row approval-row";
         const methodName = paymentMethodName(payment.payment_method);
         const reference = payment.transaction_reference ? `<small>Reference: ${escapeHtml(payment.transaction_reference)}</small>` : "";
-        row.innerHTML = `<span class="member-name">${escapeHtml(payment.paid_by_name)} sent a ${methodName} payment${reference}</span><span class="member-figures">${formatPKR(payment.amount)}<span class="payment-status unpaid">Approval needed</span></span>`;
+        const transferDetails = payment.payment_method === "bank" && payment.payer_account_number
+            ? `<small>From ${escapeHtml(payment.payer_bank_name)} · ${escapeHtml(payment.payer_account_title)} · ${escapeHtml(payment.payer_account_number)}</small>`
+            : "";
+        row.innerHTML = `<span class="member-name">${escapeHtml(payment.paid_by_name)} sent a ${methodName} payment${reference}${transferDetails}</span><span class="member-figures">${formatPKR(payment.amount)}<span class="payment-status unpaid">Approval needed</span></span>`;
         const approveButton = document.createElement("button");
         approveButton.type = "button";
         approveButton.className = "pay-button";
@@ -330,7 +333,7 @@ function renderPendingPayments(summary, memberList) {
 }
 
 function paymentMethodName(method) {
-    return ({ cash: "cash", bank: "bank", raast: "Raast", easypaisa: "Easypaisa", jazzcash: "JazzCash" })[method] || "payment";
+    return ({ cash: "cash", bank: "bank", card: "card", raast: "Raast", easypaisa: "Easypaisa", jazzcash: "JazzCash" })[method] || "payment";
 }
 
 async function approvePayment(tourId, paymentId, button) {

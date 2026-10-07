@@ -1,8 +1,18 @@
 from decimal import Decimal
+import hashlib
+import hmac
+import json
+import time
+from urllib.error import HTTPError, URLError
+from urllib.parse import urlencode
+from urllib.request import Request, urlopen
 
+from django.conf import settings
 from django.db import transaction
 from django.db.models import Q
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
+from django.views.decorators.csrf import csrf_exempt
 from rest_framework import generics, status
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
@@ -66,9 +76,10 @@ class TourSummaryAPIView(APIView):
         summary = compute_tour_summary(tour_obj)
         pending_payments = tour_obj.settlement_payments.filter(
             status=SettlementPayment.Status.PENDING
-        ).select_related('paid_by', 'paid_to')
+        ).exclude(payment_method=SettlementPayment.PaymentMethod.CARD).select_related('paid_by', 'paid_to')
         return Response({
             'tour_id': tour_obj.id,
+            'tour_title': tour_obj.title,
             'total_expenses': str(summary['total_expenses']),
             'member_count': summary['member_count'],
             'share_per_member': str(summary['share_per_member']),
@@ -100,6 +111,9 @@ class TourSummaryAPIView(APIView):
                     'transaction_reference': payment.transaction_reference,
                     'is_awaiting_your_approval': payment.paid_to_id == request.user.id,
                     'is_your_payment': payment.paid_by_id == request.user.id,
+                    'payer_bank_name': payment.payer_bank_name if request.user.id in (payment.paid_by_id, payment.paid_to_id) else '',
+                    'payer_account_title': payment.payer_account_title if request.user.id in (payment.paid_by_id, payment.paid_to_id) else '',
+                    'payer_account_number': payment.payer_account_number if request.user.id in (payment.paid_by_id, payment.paid_to_id) else '',
                 }
                 for payment in pending_payments
             ],
@@ -148,17 +162,26 @@ class SettlementPaymentAPIView(APIView):
         recipient_id = request.data.get('paid_to')
         payment_method = request.data.get('payment_method')
         transaction_reference = str(request.data.get('transaction_reference', '')).strip()
+        payer_bank_name = str(request.data.get('payer_bank_name', '')).strip()
+        payer_account_title = str(request.data.get('payer_account_title', '')).strip()
+        payer_account_number = str(request.data.get('payer_account_number', '')).strip()
 
         if payment_method not in SettlementPayment.PaymentMethod.values:
             return Response(
                 {'payment_method': ['Choose cash, bank transfer, Raast, Easypaisa, or JazzCash.']},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        if payment_method == SettlementPayment.PaymentMethod.CARD:
+            return Response({'detail': 'Use the secure card checkout button to submit a card payment.'}, status=status.HTTP_400_BAD_REQUEST)
         if len(transaction_reference) > 100:
             return Response(
                 {'transaction_reference': ['Reference must be 100 characters or fewer.']},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        if payment_method == SettlementPayment.PaymentMethod.BANK and not all((payer_bank_name, payer_account_title, payer_account_number)):
+            return Response({'detail': 'Enter the bank name, account title, and account number used for this transfer.'}, status=status.HTTP_400_BAD_REQUEST)
+        if any(len(value) > limit for value, limit in ((payer_bank_name, 100), (payer_account_title, 100), (payer_account_number, 50))):
+            return Response({'detail': 'Bank details are too long.'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             amount = Decimal(str(request.data.get('amount'))).quantize(Decimal('0.01'))
@@ -192,6 +215,9 @@ class SettlementPaymentAPIView(APIView):
             amount=amount,
             payment_method=payment_method,
             transaction_reference=transaction_reference,
+            payer_bank_name=payer_bank_name if payment_method == SettlementPayment.PaymentMethod.BANK else '',
+            payer_account_title=payer_account_title if payment_method == SettlementPayment.PaymentMethod.BANK else '',
+            payer_account_number=payer_account_number if payment_method == SettlementPayment.PaymentMethod.BANK else '',
         )
         return Response({'success': 'Payment submitted and waiting for approval.'}, status=status.HTTP_201_CREATED)
 
@@ -212,6 +238,8 @@ class SettlementPaymentApprovalAPIView(APIView):
         )
         if payment.paid_to_id != request.user.id:
             raise PermissionDenied('Only the payment recipient can approve this payment.')
+        if payment.payment_method == SettlementPayment.PaymentMethod.CARD:
+            raise PermissionDenied('Card payments are approved automatically after card checkout confirms payment.')
 
         payment.status = SettlementPayment.Status.APPROVED
         payment.save(update_fields=['status'])
@@ -232,7 +260,7 @@ class NotificationAPIView(APIView):
         pending = SettlementPayment.objects.filter(
             tour__in=tours,
             status=SettlementPayment.Status.PENDING,
-        ).filter(Q(paid_by=request.user) | Q(paid_to=request.user)).select_related(
+        ).exclude(payment_method=SettlementPayment.PaymentMethod.CARD).filter(Q(paid_by=request.user) | Q(paid_to=request.user)).select_related(
             'tour', 'paid_by', 'paid_to'
         )
         tours_with_payment_in_progress = set()
@@ -279,3 +307,139 @@ class NotificationAPIView(APIView):
             })
 
         return Response({'count': len(notifications), 'notifications': notifications[:12]})
+
+
+def stripe_api_request(path, data=None):
+    request = Request(
+        f'https://api.stripe.com/v1/{path}',
+        data=urlencode(data).encode() if data is not None else None,
+        headers={'Authorization': f'Bearer {settings.STRIPE_SECRET_KEY}'},
+        method='POST' if data is not None else 'GET',
+    )
+    try:
+        with urlopen(request, timeout=20) as response:
+            return json.loads(response.read().decode())
+    except (HTTPError, URLError, TimeoutError, json.JSONDecodeError) as exc:
+        raise RuntimeError('Unable to connect to the card payment provider.') from exc
+
+
+class StripeCheckoutSessionAPIView(APIView):
+    """Create a Stripe-hosted card checkout; card data never passes through PayTogether."""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, tour_id):
+        if not settings.STRIPE_SECRET_KEY:
+            return Response({'detail': 'Card checkout is not configured. Add STRIPE_SECRET_KEY to the server environment.'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        tour_obj = get_tour_for_member(request, tour_id)
+        try:
+            recipient_id = int(request.data.get('paid_to'))
+        except (TypeError, ValueError):
+            return Response({'detail': 'Choose a valid payment recipient.'}, status=status.HTTP_400_BAD_REQUEST)
+        summary = compute_tour_summary(tour_obj)
+        payer = next((member for member in summary['members'] if member['id'] == request.user.id), None)
+        recipient = next((member for member in summary['members'] if member['id'] == recipient_id), None)
+        if payer is None or recipient is None or payer['balance'] >= 0 or recipient['balance'] <= 0:
+            return Response({'detail': 'This payment is no longer required.'}, status=status.HTTP_400_BAD_REQUEST)
+        amount = min(-payer['balance'], recipient['balance']).quantize(Decimal('0.01'))
+        payment = SettlementPayment.objects.create(
+            tour=tour_obj,
+            paid_by=request.user,
+            paid_to_id=recipient_id,
+            amount=amount,
+            payment_method=SettlementPayment.PaymentMethod.CARD,
+            status=SettlementPayment.Status.PENDING,
+        )
+        return_url = request.build_absolute_uri(f'/tours/{tour_id}/pay/{recipient_id}/')
+        try:
+            session = stripe_api_request('checkout/sessions', {
+                'mode': 'payment',
+                'payment_method_types[0]': 'card',
+                'line_items[0][price_data][currency]': 'pkr',
+                'line_items[0][price_data][product_data][name]': f'PayTogether · {tour_obj.title}',
+                'line_items[0][price_data][unit_amount]': str(int(amount * 100)),
+                'line_items[0][quantity]': '1',
+                'customer_email': request.user.email,
+                'client_reference_id': str(payment.id),
+                'metadata[payment_id]': str(payment.id),
+                'success_url': f'{return_url}?card_session={{CHECKOUT_SESSION_ID}}',
+                'cancel_url': f'{return_url}?card_cancelled=1&payment_id={payment.id}',
+            })
+            payment.stripe_checkout_session_id = session['id']
+            payment.save(update_fields=['stripe_checkout_session_id'])
+            return Response({'checkout_url': session['url']}, status=status.HTTP_201_CREATED)
+        except (RuntimeError, KeyError):
+            payment.status = SettlementPayment.Status.CANCELLED
+            payment.save(update_fields=['status'])
+            return Response({'detail': 'Unable to start card checkout. Check Stripe configuration and try again.'}, status=status.HTTP_502_BAD_GATEWAY)
+
+
+class StripeCheckoutConfirmAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @transaction.atomic
+    def get(self, request, tour_id):
+        session_id = request.query_params.get('session_id', '')
+        payment = get_object_or_404(
+            SettlementPayment,
+            stripe_checkout_session_id=session_id,
+            tour_id=tour_id,
+            paid_by=request.user,
+            payment_method=SettlementPayment.PaymentMethod.CARD,
+        )
+        if payment.status == SettlementPayment.Status.APPROVED:
+            return Response({'success': 'Card payment confirmed.'}, status=status.HTTP_200_OK)
+        if not settings.STRIPE_SECRET_KEY:
+            return Response({'detail': 'Card checkout is not configured.'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        try:
+            session = stripe_api_request(f'checkout/sessions/{session_id}')
+        except RuntimeError as exc:
+            return Response({'detail': str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
+        if session.get('payment_status') != 'paid' or session.get('metadata', {}).get('payment_id') != str(payment.id):
+            return Response({'detail': 'Card payment has not been confirmed yet.'}, status=status.HTTP_400_BAD_REQUEST)
+        payment.status = SettlementPayment.Status.APPROVED
+        payment.save(update_fields=['status'])
+        return Response({'success': 'Card payment confirmed.'}, status=status.HTTP_200_OK)
+
+
+class StripeCheckoutCancelAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, tour_id):
+        payment = get_object_or_404(
+            SettlementPayment,
+            pk=request.data.get('payment_id'),
+            tour_id=tour_id,
+            paid_by=request.user,
+            payment_method=SettlementPayment.PaymentMethod.CARD,
+            status=SettlementPayment.Status.PENDING,
+        )
+        payment.status = SettlementPayment.Status.CANCELLED
+        payment.save(update_fields=['status'])
+        return Response({'success': 'Card checkout cancelled.'}, status=status.HTTP_200_OK)
+
+
+@csrf_exempt
+def stripe_webhook(request):
+    if request.method != 'POST' or not settings.STRIPE_WEBHOOK_SECRET:
+        return HttpResponse(status=400)
+    signature = request.headers.get('Stripe-Signature', '')
+    try:
+        parts = dict(item.split('=', 1) for item in signature.split(',') if '=' in item)
+        timestamp = int(parts.get('t', '0'))
+        signed_payload = str(timestamp).encode() + b'.' + request.body
+        expected = hmac.new(settings.STRIPE_WEBHOOK_SECRET.encode(), signed_payload, hashlib.sha256).hexdigest()
+        if abs(int(time.time()) - timestamp) > 300 or not hmac.compare_digest(expected, parts.get('v1', '')):
+            return HttpResponse(status=400)
+        event = json.loads(request.body)
+    except (ValueError, TypeError, json.JSONDecodeError):
+        return HttpResponse(status=400)
+    event_type = event.get('type')
+    session = event.get('data', {}).get('object', {})
+    payment = SettlementPayment.objects.filter(stripe_checkout_session_id=session.get('id')).first()
+    if payment and event_type in ('checkout.session.completed', 'checkout.session.async_payment_succeeded') and session.get('payment_status') == 'paid':
+        payment.status = SettlementPayment.Status.APPROVED
+        payment.save(update_fields=['status'])
+    elif payment and event_type == 'checkout.session.expired' and payment.status == SettlementPayment.Status.PENDING:
+        payment.status = SettlementPayment.Status.CANCELLED
+        payment.save(update_fields=['status'])
+    return HttpResponse(status=200)

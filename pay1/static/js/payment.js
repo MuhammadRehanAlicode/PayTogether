@@ -9,7 +9,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const accountDetails = document.querySelector("#recipientAccountDetails");
     const referenceInput = document.querySelector("#transactionReference");
     const methodInstructions = {
-        bank: "Transfer the amount to the recipient using the bank details they shared with you. Add the receipt reference if available.",
         raast: "Send money to the recipient Raast ID or IBAN using your bank app. Add the receipt reference if available.",
         easypaisa: "Send money to the recipient Easypaisa account. Add the transaction ID if available.",
         jazzcash: "Send money to the recipient JazzCash account. Add the transaction ID if available.",
@@ -19,12 +18,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!token) { window.location.href = "/login/"; return; }
 
+    document.querySelector("#raastMethodTrigger").addEventListener("click", () => {
+        const options = document.querySelector("#raastOptions");
+        const isOpen = options.hidden;
+        options.hidden = !isOpen;
+        document.querySelector("#raastMethodTrigger").setAttribute("aria-expanded", String(isOpen));
+    });
+
     form.querySelectorAll('input[name="payment_method"]').forEach((input) => {
         input.addEventListener("change", () => {
             const isCash = input.value === "cash";
             if (!input.checked) return;
+            if (input.value === "bank") {
+                window.location.href = `/tours/${tourId}/pay/${recipientId}/bank/`;
+                return;
+            }
             transferDetails.hidden = isCash;
             referenceInput.value = "";
+            showMessage("");
             transferInstructions.textContent = methodInstructions[input.value] || "Send the amount using your chosen service, then submit it for recipient approval.";
             renderAccountDetails(input.value);
         });
@@ -49,6 +60,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!accountResponse.ok) throw new Error(accountData.detail || "Unable to load recipient account details.");
             recipientPaymentDetails = accountData;
             renderAccountDetails(form.querySelector('input[name="payment_method"]:checked').value);
+            await handleCardCheckoutReturn();
         })
         .catch((error) => showMessage(error.message, true));
 
@@ -86,6 +98,30 @@ document.addEventListener("DOMContentLoaded", () => {
         const element = document.querySelector("#paymentMessage");
         element.textContent = message;
         element.style.color = isError ? "#b44737" : "#087a74";
+    }
+
+    async function handleCardCheckoutReturn() {
+        const params = new URLSearchParams(window.location.search);
+        const sessionId = params.get("card_session");
+        if (sessionId) {
+            const response = await fetch(`/api/tours/${tourId}/payments/card-confirm/?session_id=${encodeURIComponent(sessionId)}`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(data.detail || "Unable to confirm card payment.");
+            showMessage(data.success || "Card payment confirmed.");
+            setTimeout(() => { window.location.href = `/tours/${tourId}/`; }, 1300);
+        } else if (params.has("card_cancelled")) {
+            const paymentId = params.get("payment_id");
+            if (paymentId) {
+                await fetch(`/api/tours/${tourId}/payments/card-cancel/`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                    body: JSON.stringify({ payment_id: paymentId }),
+                });
+            }
+            showMessage("Card checkout was cancelled. You can choose another payment method.", true);
+        }
     }
 
     function renderAccountDetails(method) {

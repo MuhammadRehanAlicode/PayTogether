@@ -41,7 +41,16 @@ document.addEventListener("DOMContentLoaded", () => {
                 },
                 body: JSON.stringify(payload),
             });
-            const data = await response.json();
+            const responseText = await response.text();
+            let data = {};
+            try {
+                data = responseText ? JSON.parse(responseText) : {};
+            } catch {
+                const isHtml = /<\s*!doctype\s+html|<\s*html/i.test(responseText);
+                throw new Error(isHtml
+                    ? `The server returned an HTML error (HTTP ${response.status}). Apply pending database migrations and check the Django server log.`
+                    : `The server returned an unreadable response (HTTP ${response.status}).`);
+            }
 
             if (!response.ok) {
                 const error = data.non_field_errors?.[0] || data.email?.[0] || data.full_name?.[0] || "Could not create your account.";

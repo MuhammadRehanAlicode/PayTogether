@@ -91,6 +91,16 @@
         .account-value strong { text-align:right; overflow-wrap:anywhere; }
         .account-empty { color:#9a5b14!important; }
         @media(max-width:760px) { .card { grid-template-columns:1fr; } .summary { min-height:150px; } }
+        .raast-trigger { width:100%; text-align:left; font:inherit; color:inherit; }
+        .raast-trigger .chevron { margin-left:auto; color:#63747b; }
+        .raast-options { grid-column:1/-1; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:9px; padding:12px; border:1px solid #dce9e5; border-radius:14px; background:#f7fbf9; }
+        .raast-options[hidden] { display:none; }
+        .raast-option { display:flex; align-items:center; gap:8px; padding:12px 10px; border:1px solid #e0e8e5; border-radius:11px; background:white; cursor:pointer; }
+        .raast-option:has(input:checked) { border-color:var(--teal); background:var(--mint); }
+        .raast-option input { accent-color:var(--teal); }
+        @media(max-width:560px) { .raast-options { grid-template-columns:1fr; } }
+        .cash-method { grid-column:1/-1; }
+        .bank-method:hover { border-color:var(--teal); background:#f1faf6; }
     </style>
 </head>
 <body data-tour-id="{{ tour_id }}" data-recipient-id="{{ recipient_id }}">
@@ -111,11 +121,14 @@
                 <h2 class="prompt">Payment method</h2>
                 <p class="section-hint">Select the method you used to pay your group member.</p>
                 <div class="methods">
-                    <label class="method"><input type="radio" name="payment_method" value="cash" checked><span class="method-icon cash-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><circle cx="12" cy="12.5" r="3"/><path d="M6 9h.01M18 16h.01M7 4h14a2 2 0 0 1 2 2v10"/></svg></span><span><strong>Cash</strong><small>Handed directly to the recipient</small></span></label>
-                    <label class="method"><input type="radio" name="payment_method" value="bank"><span class="method-icon bank-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m3 9 9-5 9 5M5 10h14M6 10v8m4-8v8m4-8v8m4-8v8M4 20h16M3 22h18"/></svg></span><span><strong>Bank transfer</strong><small>Any bank or mobile banking app</small></span></label>
-                    <label class="method"><input type="radio" name="payment_method" value="raast"><span class="method-icon raast-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 8h13l-3-3m6 11H7l3 3"/><path d="M17 5v3m-10 8v3"/></svg></span><span><strong>Raast</strong><small>Instant transfer from your bank app</small></span></label>
-                    <label class="method"><input type="radio" name="payment_method" value="easypaisa"><span class="method-icon easypaisa-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="14" rx="3"/><path d="M3 10h18m-5 5h2M7 3h10"/></svg></span><span><strong>Easypaisa</strong><small>Send from your Easypaisa wallet</small></span></label>
-                    <label class="method"><input type="radio" name="payment_method" value="jazzcash"><span class="method-icon jazzcash-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M10 6h4m-5 8 2 2 4-5m-3 7h.01"/></svg></span><span><strong>JazzCash</strong><small>Send from your JazzCash wallet</small></span></label>
+                    <label class="method cash-method"><input type="radio" name="payment_method" value="cash" checked><span class="method-icon cash-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><circle cx="12" cy="12.5" r="3"/><path d="M6 9h.01M18 16h.01M7 4h14a2 2 0 0 1 2 2v10"/></svg></span><span><strong>Cash</strong><small>Handed directly to the recipient</small></span></label>
+                    <label class="method bank-method"><input type="radio" name="payment_method" value="bank"><span class="method-icon bank-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m3 9 9-5 9 5M5 10h14M6 10v8m4-8v8m4-8v8m4-8v8M4 20h16M3 22h18"/></svg></span><span><strong>Bank transfer</strong><small>Transfer from your bank account</small></span></label>
+                    <button id="raastMethodTrigger" class="method raast-trigger" type="button" aria-expanded="false" aria-controls="raastOptions"><span class="method-icon raast-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 8h13l-3-3m6 11H7l3 3"/><path d="M17 5v3m-10 8v3"/></svg></span><span><strong>Raast</strong><small>Raast, Easypaisa, or JazzCash</small></span><span class="chevron" aria-hidden="true">⌄</span></button>
+                    <div id="raastOptions" class="raast-options" hidden>
+                        <label class="raast-option"><input type="radio" name="payment_method" value="raast"><span>Raast</span></label>
+                        <label class="raast-option"><input type="radio" name="payment_method" value="easypaisa"><span>Easypaisa</span></label>
+                        <label class="raast-option"><input type="radio" name="payment_method" value="jazzcash"><span>JazzCash</span></label>
+                    </div>
                 </div>
                 <div id="transferDetails" class="transfer-details" hidden>
                     <div id="recipientAccountDetails" aria-live="polite"></div>
@@ -126,7 +139,7 @@
                 </div>
                 <button id="paymentSubmit" class="submit" type="submit">Submit for approval</button>
                 <p id="paymentMessage" class="message" role="alert" aria-live="polite"></p>
-                <p class="note">Wallet, Raast and bank transfers are recorded manually. Confirm the recipient account details with them before sending money.</p>
+                <p class="note">Bank, Raast, Easypaisa and JazzCash transfers are recorded manually. Confirm the recipient details before sending money.</p>
             </form>
         </section>
     </main>

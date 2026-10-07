@@ -1,0 +1,106 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
+    <title>Bank transfer | PayTogether</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --navy:#11283a; --teal:#087a74; --mint:#e7f5f0; --paper:#fffdf9; --muted:#63747b; --coral:#e87856; }
+        * { box-sizing:border-box; }
+        body { min-height:100vh; margin:0; color:#173345; background:radial-gradient(circle at 8% 8%,rgba(8,122,116,.11),transparent 28rem),radial-gradient(circle at 92% 92%,rgba(232,120,86,.1),transparent 26rem),#f7f5ef; font-family:"DM Sans",Arial,sans-serif; }
+        .shell { width:min(100%,1320px); min-height:100vh; margin:auto; padding:24px clamp(20px,5vw,72px) 48px; }
+        .page-top { display:flex; align-items:center; justify-content:space-between; min-height:44px; }
+        .back { display:inline-flex; align-items:center; gap:8px; min-height:42px; padding:0 14px; border:1px solid #dce5e2; border-radius:12px; color:#45616c; background:rgba(255,255,255,.8); font-size:.9rem; font-weight:700; text-decoration:none; transition:.18s ease; }
+        .back:hover { border-color:#a9d8ca; color:var(--teal); background:white; transform:translateY(-1px); }
+        .notification-wrap { position:relative; }
+        .notification-bell { position:relative; display:grid; width:42px; height:42px; place-items:center; border:1px solid #d9e1df; border-radius:50%; cursor:pointer; color:var(--teal); background:var(--paper); font-size:1.1rem; }
+        .notification-count { position:absolute; top:-5px; right:-5px; min-width:18px; padding:2px 4px; border:2px solid #f7f5ef; border-radius:999px; color:white; background:var(--coral); font:700 .61rem Arial,sans-serif; }
+        .notification-menu { position:absolute; z-index:10; top:51px; right:0; display:none; width:min(370px,calc(100vw - 32px)); overflow:hidden; border:1px solid #d9e1df; border-radius:16px; background:white; box-shadow:0 18px 45px rgba(25,48,56,.18); }
+        .notification-menu.is-open { display:block; }
+        .notification-empty { margin:0; padding:22px; color:var(--muted); text-align:center; font-size:.85rem; }
+        .notification-item { display:flex; gap:11px; padding:14px 16px; border-bottom:1px solid #edf0ef; color:var(--navy); text-decoration:none; }
+        .notification-item:last-child { border:0; }
+        .notification-item:hover { background:#f5faf8; }
+        .notification-dot { flex:0 0 auto; width:9px; height:9px; margin-top:5px; border-radius:50%; background:var(--coral); }
+        .notification-item.pending .notification-dot { background:#d79b1e; }
+        .notification-item strong,.notification-item small,.notification-item em { display:block; }
+        .notification-item strong { font-size:.82rem; }
+        .notification-item small { margin-top:4px; color:var(--muted); font-size:.74rem; line-height:1.4; }
+        .notification-item em { margin-top:6px; color:var(--teal); font-size:.7rem; font-style:normal; font-weight:700; text-transform:uppercase; }
+        .brand { margin:0 0 18px; color:var(--teal); font-size:.78rem; font-weight:800; letter-spacing:.12em; text-transform:uppercase; }
+        h1 { margin:0; color:white; font-size:1.35rem; line-height:1.3; letter-spacing:-.02em; }
+        .intro { max-width:420px; margin:12px 0 28px; color:rgba(255,255,255,.76); font-size:.95rem; line-height:1.65; }
+        .card { display:grid; grid-template-columns:.86fr 1.14fr; min-height:min(760px,calc(100vh - 110px)); overflow:hidden; border:1px solid rgba(17,40,58,.08); border-radius:28px; background:white; box-shadow:0 26px 75px rgba(17,40,58,.13); }
+        .summary { position:relative; display:flex; min-height:100%; flex-direction:column; align-items:flex-start; justify-content:center; gap:10px; overflow:hidden; padding:clamp(34px,6vw,76px); color:white; background:linear-gradient(145deg,#11283a 0%,#174b55 62%,#087a74 130%); }
+        .summary::before,.summary::after { position:absolute; z-index:0; content:""; border:1px solid rgba(255,255,255,.1); border-radius:50%; pointer-events:none; }
+        .summary::before { width:380px; height:380px; right:-215px; top:-150px; box-shadow:0 0 0 32px rgba(255,255,255,.025),0 0 0 70px rgba(255,255,255,.02); }
+        .summary::after { width:240px; height:240px; left:-150px; bottom:-145px; }
+        .summary > * { position:relative; z-index:1; }
+        .summary-label { margin:0 0 8px; color:#a9d8ca; font-size:.72rem; font-weight:800; letter-spacing:.12em; text-transform:uppercase; }
+        .recipient { margin:0; overflow-wrap:anywhere; color:rgba(255,255,255,.82); font-size:1rem; font-weight:500; }
+        .amount { margin:8px 0 0; color:#fff; font-size:clamp(2.3rem,4vw,3.25rem); letter-spacing:-.05em; overflow-wrap:anywhere; }
+        form { min-width:0; align-self:center; width:100%; padding:clamp(30px,5vw,66px); }
+        .section-title { margin:0; color:#173345; font-size:1.2rem; font-weight:800; letter-spacing:-.02em; }
+        .section-hint { margin:6px 0 20px; color:#63747b; font-size:.88rem; line-height:1.5; }
+        .transfer-details { padding:17px 18px; border:1px solid #cfe5dc; border-radius:14px; color:#173345; background:#f4faf7; box-shadow:0 3px 12px rgba(8,122,116,.04); }
+        .account-heading { margin:0 0 8px; color:#087a74; font-weight:800; }
+        .account-value { display:flex; justify-content:space-between; gap:12px; padding:10px 0; border-bottom:1px solid #dcebe5; }
+        .account-value:last-child { border-bottom:0; }
+        .account-value span { color:#63747b; }
+        .account-value strong { overflow-wrap:anywhere; text-align:right; }
+        .account-empty { color:#9a5b14!important; line-height:1.5; }
+        .form-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px 12px; margin-top:22px; }
+        .field { display:block; min-width:0; color:#304b56; font-size:.84rem; font-weight:700; }
+        .field.full { grid-column:1/-1; }
+        .field input { display:block; width:100%; min-height:48px; margin-top:7px; padding:12px 14px; border:1px solid #cbd9d5; border-radius:10px; color:#173345; background:white; font:400 .95rem "DM Sans",Arial,sans-serif; box-shadow:0 2px 5px rgba(17,40,58,.035); transition:border-color .18s ease,box-shadow .18s ease; }
+        .field input:focus { outline:3px solid rgba(8,122,116,.14); border-color:var(--teal); box-shadow:0 0 0 1px var(--teal); }
+        .submit { width:100%; min-height:52px; margin-top:20px; padding:13px 18px; border:0; border-radius:12px; cursor:pointer; color:white; background:linear-gradient(110deg,#087a74,#0a8d7e); box-shadow:0 10px 22px rgba(8,122,116,.2); font:700 .98rem "DM Sans",Arial,sans-serif; transition:transform .18s ease,box-shadow .18s ease; }
+        .submit:hover { background:linear-gradient(110deg,#06645f,#087a74); transform:translateY(-1px); box-shadow:0 13px 24px rgba(8,122,116,.24); }
+        .submit:disabled { cursor:not-allowed; opacity:.6; }
+        .message { min-height:21px; margin:14px 0 0; font-size:.9rem; font-weight:700; text-align:center; }
+        .note { margin:14px 0 0; padding:12px 14px; border:1px solid #e6eeeb; border-radius:11px; color:#63747b; background:#f7faf9; font-size:.76rem; line-height:1.5; }
+        @media(max-width:900px) { .shell { padding:18px 5% 36px; } .card { grid-template-columns:1fr; min-height:0; } .summary { min-height:300px; justify-content:flex-end; padding:36px; } form { padding:32px; } }
+        @media(max-width:560px) { .shell { width:100%; padding:14px 16px 28px; } .page-top { padding:0 2px; } .brand { margin:6px 0 14px; } .card { border-radius:22px; } .summary { min-height:250px; gap:8px; padding:25px; } form { padding:25px 20px; } .form-grid { grid-template-columns:1fr; gap:12px; } .field.full { grid-column:auto; } }
+    </style>
+</head>
+<body data-tour-id="{{ tour_id }}" data-recipient-id="{{ recipient_id }}">
+    <main class="shell">
+        <div class="page-top">
+            <a class="back" href="/tours/{{ tour_id }}/">&larr; Back to group balance</a>
+            <div class="notification-wrap" data-notification-wrap>
+                <button class="notification-bell" type="button" data-notification-bell aria-label="Open payment notifications" aria-expanded="false">&#128276;<span class="notification-count" data-notification-count hidden>0</span></button>
+                <div class="notification-menu" data-notification-menu aria-label="Payment notifications"></div>
+            </div>
+        </div>
+        <p class="brand">PayTogether</p>
+        <section class="card" aria-label="Bank transfer details">
+            <aside class="summary">
+                <div><p class="summary-label">Group payment</p><h1>Bank transfer</h1><p class="intro">Complete your transfer to settle your share with your group.</p></div>
+                <div><p class="summary-label">Amount to transfer</p><strong id="paymentAmount" class="amount">PKR 0.00</strong></div>
+                <div><p class="summary-label">Sending to</p><p id="recipientName" class="recipient">Loading recipient...</p></div>
+            </aside>
+            <form id="bankTransferForm">
+                <h2 class="section-title">Bank transfer details</h2>
+                <p class="section-hint">Send your transfer to the recipient, then confirm the account you paid from.</p>
+                <div id="recipientAccountDetails" class="transfer-details" aria-live="polite"><p>Loading recipient bank details...</p></div>
+                <div class="form-grid">
+                    <label class="field" for="payerBankName">Your bank name<input id="payerBankName" name="payer_bank_name" maxlength="100" autocomplete="organization" required></label>
+                    <label class="field" for="payerAccountTitle">Your account title<input id="payerAccountTitle" name="payer_account_title" maxlength="100" autocomplete="name" required></label>
+                    <label class="field full" for="payerAccountNumber">Your account number / IBAN<input id="payerAccountNumber" name="payer_account_number" maxlength="50" autocomplete="off" required></label>
+                    <label class="field full" for="transactionReference">Transaction ID / reference (optional)<input id="transactionReference" name="transaction_reference" maxlength="100" autocomplete="off" placeholder="Add the reference from your receipt"></label>
+                </div>
+                <button id="bankTransferSubmit" class="submit" type="submit">Submit bank transfer for approval</button>
+                <p id="paymentMessage" class="message" role="alert" aria-live="polite"></p>
+                <p class="note">Your payment will be recorded as pending until the recipient reviews and approves it.</p>
+            </form>
+        </section>
+    </main>
+    <script src="{% static 'js/bank-transfer.js' %}"></script>
+    <script src="{% static 'js/notifications.js' %}"></script>
+</body>
+</html>

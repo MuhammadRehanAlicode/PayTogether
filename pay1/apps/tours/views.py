@@ -33,6 +33,13 @@ def payment_page(request, tour_id, recipient_id):
     })
 
 
+def bank_transfer_page(request, tour_id, recipient_id):
+    return render(request, 'tours/bank-transfer.html', {
+        'tour_id': tour_id,
+        'recipient_id': recipient_id,
+    })
+
+
 def join_tour_page(request):
     return render(request, 'tours/join-tour.html')
 class TourdetailAPIView(generics.RetrieveUpdateDestroyAPIView):

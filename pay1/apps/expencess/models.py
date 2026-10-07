@@ -43,6 +43,7 @@ class SettlementPayment(models.Model):
     class PaymentMethod(models.TextChoices):
         CASH = 'cash', 'Cash'
         BANK = 'bank', 'Bank transfer'
+        CARD = 'card', 'Card'
         RAAST = 'raast', 'Raast transfer (manual confirmation)'
         EASYPAISA = 'easypaisa', 'Easypaisa (manual confirmation)'
         JAZZCASH = 'jazzcash', 'JazzCash (manual confirmation)'
@@ -50,6 +51,7 @@ class SettlementPayment(models.Model):
     class Status(models.TextChoices):
         PENDING = 'pending', 'Pending approval'
         APPROVED = 'approved', 'Approved'
+        CANCELLED = 'cancelled', 'Cancelled'
 
     tour = models.ForeignKey(
         'tours.tour',
@@ -73,6 +75,10 @@ class SettlementPayment(models.Model):
     )
     payment_method = models.CharField(max_length=32, choices=PaymentMethod.choices)
     transaction_reference = models.CharField(max_length=100, blank=True)
+    payer_bank_name = models.CharField(max_length=100, blank=True)
+    payer_account_title = models.CharField(max_length=100, blank=True)
+    payer_account_number = models.CharField(max_length=50, blank=True)
+    stripe_checkout_session_id = models.CharField(max_length=100, blank=True, null=True, unique=True)
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
     created_at = models.DateTimeField(auto_now_add=True)
 
